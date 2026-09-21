@@ -353,6 +353,34 @@ input:checked+.tslider:before{transform:translateX(18px)}
   .kpi{padding:14px}
   .tkbx{width:94vw}
 }
+/* ══ APERTURA DE CAJA AL ENTRAR ══ */
+#aperBox{position:fixed;inset:0;z-index:9998;background:rgba(15,20,35,.75);display:none;align-items:center;justify-content:center;padding:18px;overflow:auto}
+#aperBox.on{display:flex}
+.aper-c{background:var(--srf);border-radius:20px;padding:28px;max-width:430px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.45);margin:auto}
+.aper-dia{font-size:13px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:1.3px;text-align:center}
+.aper-fec{font-size:25px;font-weight:800;color:var(--t);text-align:center;margin-top:3px;line-height:1.2}
+.aper-sep{height:1px;background:var(--brd);margin:17px 0}
+.aper-t{font-size:16px;font-weight:800;color:var(--t);text-align:center}
+.aper-s{font-size:12.5px;color:var(--t2);text-align:center;margin:7px 0 15px;line-height:1.55}
+.aper-q{background:var(--px);border-radius:10px;padding:9px 13px;font-size:13px;color:var(--t);text-align:center;margin-bottom:15px}
+.aper-l{font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.9px;display:block;margin-bottom:6px}
+.aper-i{width:100%;padding:13px 15px;border-radius:12px;border:1.5px solid var(--brd2);background:var(--px);
+        color:var(--t);font-family:var(--f);font-size:23px;font-weight:800;outline:none;text-align:right}
+.aper-i:focus{border-color:var(--p);background:var(--srf)}
+.aper-av{font-size:12px;color:var(--amb);font-weight:600;margin-top:11px;text-align:center;min-height:16px;line-height:1.45}
+/* ══ CÓDIGO DE RECUPERACIÓN ══ */
+#recBox{position:fixed;inset:0;z-index:10004;background:rgba(15,20,35,.72);display:none;align-items:center;justify-content:center;padding:18px}
+#recBox.on{display:flex}
+.rec-c{background:var(--srf);border-radius:20px;padding:30px;max-width:460px;width:100%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.rec-i{font-size:42px;margin-bottom:8px}
+.rec-t{font-size:20px;font-weight:800;color:var(--t)}
+.rec-s{font-size:13px;color:var(--t2);margin:9px 0 18px;line-height:1.6}
+.rec-cod{font-family:'Courier New',monospace;font-size:26px;font-weight:800;letter-spacing:3px;color:var(--p);
+         background:var(--px);border:2px dashed var(--brd2);border-radius:13px;padding:17px 10px;word-break:break-all}
+.rec-u{font-size:13px;color:var(--t2);margin-top:12px}
+.rec-chk{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:16px;font-size:13px;color:var(--t);cursor:pointer}
+.rec-chk input{width:17px;height:17px;accent-color:var(--p);cursor:pointer}
+.rec-link{background:none;border:none;color:var(--plc);font-family:var(--f);font-size:12px;cursor:pointer;text-decoration:underline;margin-top:14px;display:block;width:100%}
 /* ══ CARGA Y SELECTOR DE INSTALACIÓN ══ */
 #cargando{position:fixed;inset:0;z-index:10002;background:linear-gradient(135deg,var(--lo1),var(--lo2) 55%,var(--lo3));display:flex;align-items:center;justify-content:center}
 #cargando.hid{display:none}
@@ -436,6 +464,47 @@ input[type=range]{accent-color:var(--p)}
     <button class="btn bp" style="width:100%;margin-top:12px" onclick="__nuevaInst()">➕ Es un negocio nuevo</button>
   </div>
 </div>
+<div id="aperBox">
+  <div class="aper-c">
+    <div class="aper-dia" id="aperDia">—</div>
+    <div class="aper-fec" id="aperFec">—</div>
+    <div class="aper-sep"></div>
+    <div class="aper-t">🔓 Abre la caja para empezar el día</div>
+    <p class="aper-s">Escribe con cuánta plata arrancas (la base para dar vueltas).
+      Sin esto, al cerrar el día el sistema no puede decirte si la caja cuadró.</p>
+    <div class="aper-q" id="aperCajero">—</div>
+    <label class="aper-l">Base de la caja</label>
+    <input class="aper-i" id="aperMonto" type="number" min="0" step="1000" inputmode="numeric">
+    <div class="bill-row" style="margin-top:9px">
+      <button class="bill" onclick="aperFijar(50000)">50.000</button>
+      <button class="bill" onclick="aperFijar(100000)">100.000</button>
+      <button class="bill" onclick="aperFijar(200000)">200.000</button>
+    </div>
+    <label class="aper-l" style="margin-top:14px">Turno</label>
+    <select class="mi" id="aperTurno">
+      <option>Mañana (8AM–1PM)</option><option>Tarde (1PM–6PM)</option>
+      <option selected>Completo (8AM–6PM)</option><option>Especial</option>
+    </select>
+    <div id="aperAviso" class="aper-av"></div>
+    <button class="btn bp" style="width:100%;margin-top:16px;padding:13px" onclick="aperConfirmar()">🔓 Abrir caja y empezar</button>
+    <button class="rec-link" onclick="aperSaltar()">Ahora no, entrar sin abrir caja</button>
+  </div>
+</div>
+<div id="recBox">
+  <div class="rec-c">
+    <div class="rec-i">🔑</div>
+    <div class="rec-t">Tu código de recuperación</div>
+    <p class="rec-s">Si algún día olvidas tu contraseña, este código es la <b>única</b> forma de
+      volver a entrar. Anótalo en un papel y guárdalo fuera del computador.</p>
+    <div class="rec-cod" id="recCodigo">····-····-····</div>
+    <p class="rec-u">Tu usuario: <b id="recUsuario">—</b></p>
+    <label class="rec-chk"><input type="checkbox" id="recCheck"> Ya lo anoté en un papel seguro</label>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn bo" style="flex:1" onclick="imprimirCodigo()">🖨️ Imprimir</button>
+      <button class="btn bp" style="flex:1" onclick="cerrarCodigoRecuperacion()">Continuar</button>
+    </div>
+  </div>
+</div>
 <!-- ASISTENTE DE PRIMER ARRANQUE -->
 <div id="wz">
   <div class="wzc">
@@ -473,7 +542,8 @@ input[type=range]{accent-color:var(--p)}
       <div class="mf"><label class="ml">Usuario para entrar *</label><input class="mi" id="wzAdmU" placeholder="Ej: edisson" autocomplete="off"></div>
       <div class="mf"><label class="ml">Contraseña * (mínimo 6 caracteres)</label><input class="mi" id="wzAdmP" type="password" autocomplete="new-password"></div>
       <div class="mf"><label class="ml">Repite la contraseña *</label><input class="mi" id="wzAdmP2" type="password" autocomplete="new-password"></div>
-      <div class="wzwarn">⚠️ <b>Anota esta contraseña.</b> Los datos se guardan en este equipo y no hay forma de recuperarla si la olvidas.</div>
+      <div class="wzwarn">⚠️ <b>Anota esta contraseña.</b> Al terminar te vamos a dar además un
+        <b>código de recuperación</b> por si algún día la olvidas.</div>
     </div>
 
     <div class="wzerr" id="wzErr"></div>
@@ -500,6 +570,7 @@ input[type=range]{accent-color:var(--p)}
       <div class="lf"><label class="ll">Contraseña</label><input class="li" id="lP" type="password" placeholder="••••••••••"></div>
       <button class="lbtn" onclick="login()">🔐 Iniciar Sesión</button>
       <div class="lerr" id="lerr"></div>
+      <button class="rec-link" onclick="olvideClave()">¿Olvidaste tu contraseña?</button>
       <div class="lver" id="loVer">VentasPRO · 2026</div>
     </div>
   </div>
@@ -669,11 +740,11 @@ input[type=range]{accent-color:var(--p)}
         <div class="itop">
           <input class="sb2" id="invSr" placeholder="🔍 Buscar producto..." oninput="rInv()">
           <select class="ms" id="invCF" onchange="rInv()" style="width:190px;background:var(--px)"></select>
-          <button class="btn bp" onclick="openM('producto')">+ Nuevo Producto</button>
+          <button class="btn bp" data-perm="productos" onclick="openM('producto')">+ Nuevo Producto</button>
         </div>
         <div class="card">
           <div class="chd"><div><div class="ct2">📦 Inventario General</div><div class="cs" id="invCnt">0 productos</div></div></div>
-          <table><thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Costo</th><th>Venta</th><th>Stock</th><th>Margen</th><th>Acciones</th></tr></thead><tbody id="invTbl"></tbody></table>
+          <table><thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th class="col-costo">Costo</th><th>Venta</th><th>Stock</th><th class="col-costo">Margen</th><th>Acciones</th></tr></thead><tbody id="invTbl"></tbody></table>
         </div>
       </div>
       <!-- CATEGORÍAS -->
@@ -787,7 +858,10 @@ input[type=range]{accent-color:var(--p)}
       <div class="pn ao" id="pn-usuarios">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
           <div><h2 style="font-size:18px;font-weight:800">👤 Usuarios</h2><p style="font-size:12px;color:var(--t2);margin-top:3px">Solo administradores pueden gestionar accesos</p></div>
-          <button class="btn bp" onclick="openM('usuario')">+ Nuevo Usuario</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn bo" onclick="openM('miClave')">🔑 Cambiar mi contraseña</button>
+            <button class="btn bp" onclick="openM('usuario')">+ Nuevo Usuario</button>
+          </div>
         </div>
         <div id="usrWr"></div>
       </div>
@@ -1052,7 +1126,7 @@ const COLECCIONES = {
 };
 const STORES = ['kv', ...Object.values(COLECCIONES).map(c => c.store)];
 
-const VERSION_POS = '6.5.0';
+const VERSION_POS = '6.7.0';
 function versionActual(){
   if(ESCRITORIO && INFO_APP && INFO_APP.version) return INFO_APP.version;
   return VERSION_POS;
@@ -1941,6 +2015,7 @@ function impMarca(){
   inp.click();
 }
 function resetMarca(){
+  if(!exigir('marca','cambiar la personalización'))return;
   if(!confirm('¿Restaurar el diseño original? Tus datos de ventas e inventario no se tocan.')) return;
   brand = Object.assign({}, BRAND_DEF);
   saveBrand(); applyTheme(); rMarca();
@@ -1983,17 +2058,56 @@ function login(){
   document.getElementById('lo').classList.add('hid');document.getElementById('app').style.display='block';
   initApp();
 }
+/* Recuperación con el código entregado al instalar */
+function olvideClave(){
+  const guardado = ld('pos_recuperacion', null);
+  if(!guardado){
+    alert('Esta instalación no tiene código de recuperación.\n\n'
+        + 'Comunícate con quien te instaló el sistema: se puede recuperar el '
+        + 'acceso sin perder la información.');
+    return;
+  }
+  const cod = prompt('Escribe el código de recuperación que te entregaron al instalar el sistema:\n\n'
+                   + '(12 caracteres, con guiones)');
+  if(cod === null) return;
+  const limpio = cod.trim().toUpperCase();
+  if(hashPass('rec.' + limpio) !== guardado){
+    alert('❌ El código no es correcto.\n\nRevisa que lo hayas escrito completo, con los guiones.');
+    return;
+  }
+  const nueva = prompt('✅ Código correcto.\n\nEscribe tu contraseña NUEVA (mínimo 6 caracteres):');
+  if(nueva === null) return;
+  if(String(nueva).length < 6){ alert('La contraseña debe tener al menos 6 caracteres.'); return; }
+  const rep2 = prompt('Escríbela otra vez para confirmar:');
+  if(rep2 !== nueva){ alert('Las dos contraseñas no coinciden.'); return; }
+  const admin = users.find(u => u.rol === 'admin' && u.activo !== false) || users[0];
+  if(!admin){ alert('No hay usuario administrador en esta instalación.'); return; }
+  admin.password = hashPass(nueva);
+  sv(K.u, users);
+  // El código usado se invalida y se entrega uno nuevo
+  const nuevoCod = generarCodigoRecuperacion();
+  sv('pos_recuperacion', hashPass('rec.' + nuevoCod));
+  alert('✅ Listo. Entra con:\n\n'
+      + 'Usuario: ' + (admin.alias || admin.nombre.split(' ')[0].toLowerCase()) + '\n'
+      + 'Contraseña: la que acabas de escribir\n\n'
+      + 'TU CÓDIGO NUEVO DE RECUPERACIÓN ES:\n\n     ' + nuevoCod + '\n\n'
+      + 'Anótalo: el anterior ya no sirve.');
+  const lu = document.getElementById('lU');
+  if(lu) lu.value = admin.alias || admin.nombre.split(' ')[0].toLowerCase();
+}
 function logout(){if(!confirm('¿Deseas cerrar sesión?'))return;me=null;document.getElementById('app').style.display='none';document.getElementById('lo').classList.remove('hid');document.getElementById('lU').value='';document.getElementById('lP').value=''}
 function initApp(){
   const ini=me.nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('sbAv').textContent=ini;
   document.getElementById('sbNm').textContent=me.nombre.split(' ').slice(0,2).join(' ');
   document.getElementById('sbRl').textContent=me.rol==='admin'?'👑 Administrador':'🛒 Vendedor';
-  document.getElementById('stU').textContent=me.nombre.split(' ').slice(0,2).join(' ')+' · '+(brand.producto||'POS')+' v'+versionActual()+(ESCRITORIO?'':' (navegador)');
+  document.getElementById('stU').textContent=me.nombre.split(' ').slice(0,2).join(' ')+' · '+(brand.producto||'POS')+' v'+versionActual()+(ESCRITORIO?'':(EN_APP?' (tablet)':' (navegador)'));
   document.getElementById('sbEl').className='sb'+(me.rol==='admin'?' isa':'');
   document.getElementById('ctEl').className='ct'+(me.rol==='admin'?' isa':'');
   applyTheme();loadCfg();calcSt();rDash();clockTick();updPrinterStatus();
+  aplicarPermisos();
   avisarRespaldo();
+  setTimeout(pedirAperturaCaja,500);
   const vf=document.getElementById('ventasFecha');if(vf)vf.value=fechaISO();
 }
 /* Genera y descarga el respaldo sin que nadie tenga que acordarse */
@@ -2049,10 +2163,71 @@ function avisarRespaldo(){
 function clockTick(){document.getElementById('clk').textContent=new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
 setInterval(clockTick,1000);
 
+/* ══════════ PERMISOS POR ROL ══════════
+   El vendedor atiende la caja; no toca inventario, proveedores ni dinero
+   que no haya pasado por una venta. */
+const PERMISOS = {
+  admin: {
+    paginas: '*',
+    productos:true, categorias:true, proveedores:true, usuarios:true, marca:true,
+    config:true, verCostos:true, reembolso:true, finanzasResumen:true,
+    gastosPersonal:true, exportar:true, borrarDatos:true
+  },
+  vendedor: {
+    paginas: ['dashboard','pos','ventas','inventario','clientes','fiado','cierre','devoluciones','finanzas'],
+    productos:false, categorias:false, proveedores:false, usuarios:false, marca:false,
+    config:false, verCostos:false, reembolso:false, finanzasResumen:false,
+    gastosPersonal:false, exportar:false, borrarDatos:false
+  }
+};
+function permisos(){ return PERMISOS[me && me.rol] || PERMISOS.vendedor; }
+function esAdmin(){ return !!(me && me.rol === 'admin'); }
+function puede(q){ const p = permisos(); return p[q] === true; }
+function puedeVer(pagina){
+  const p = permisos();
+  return p.paginas === '*' || p.paginas.indexOf(pagina) >= 0;
+}
+/* Corta la acción y avisa. Se llama DENTRO de cada función sensible, no
+   solo al esconder el botón: esconder no es proteger. */
+function exigir(q, queEs){
+  if(puede(q)) return true;
+  notify('⛔ Tu usuario no tiene permiso para ' + (queEs || 'esta acción'));
+  return false;
+}
+
+/* Ajusta el menú y los botones a lo que el usuario puede hacer */
+function aplicarPermisos(){
+  document.querySelectorAll('.si').forEach(b => {
+    const m = (b.getAttribute('onclick') || '').match(/go\('([^']+)'\)/);
+    if(!m) return;
+    b.style.display = puedeVer(m[1]) ? '' : 'none';
+  });
+  // Botones que crean o borran
+  const ocultar = (sel, permitido) => document.querySelectorAll(sel)
+    .forEach(e => { e.style.display = permitido ? '' : 'none'; });
+  ocultar('[data-perm="productos"]', puede('productos'));
+  ocultar('[data-perm="categorias"]', puede('categorias'));
+  ocultar('[data-perm="proveedores"]', puede('proveedores'));
+  ocultar('[data-perm="exportar"]', puede('exportar'));
+  // Columnas de costo y margen del inventario
+  document.querySelectorAll('.col-costo').forEach(e => {
+    e.style.display = puede('verCostos') ? '' : 'none';
+  });
+  // Pestañas de finanzas
+  document.querySelectorAll('.ftab').forEach(b => {
+    const m = (b.getAttribute('onclick') || '').match(/finTab\(this,'([^']+)'\)/);
+    if(!m) return;
+    let ok = true;
+    if(m[1] === 'resumen') ok = puede('finanzasResumen');
+    if(m[1] === 'gastos-personal') ok = puede('gastosPersonal');
+    b.style.display = ok ? '' : 'none';
+  });
+}
+
 // NAVEGACIÓN
 const titles={dashboard:'📊 Dashboard',pos:'🛒 Punto de Venta',ventas:'🧾 Historial de Ventas',inventario:'📦 Inventario',categorias:'🏷️ Categorías',proveedores:'🚚 Proveedores',finanzas:'💰 Ingresos y Gastos',cierre:'🔐 Cierre del Día',clientes:'👥 Clientes',usuarios:'👤 Usuarios',fiado:'📋 Fiado y Cartera',marca:'🎨 Personalizar',config:'⚙️ Configuración',impresora:'🖨️ Impresora',reportes:'📈 Reportes',devoluciones:'↩️ Devoluciones',nube:'☁️ Sincronización'};
 function go(id){
-  if((id==='usuarios'||id==='marca')&&me.rol!=='admin'){notify('⛔ Solo administradores');return}
+  if(!puedeVer(id)){notify('⛔ Tu usuario no tiene acceso a esta sección');return}
   document.querySelectorAll('.pn').forEach(p=>p.classList.remove('on'));
   const p=document.getElementById('pn-'+id);if(p)p.classList.add('on');
   document.getElementById('tbT').textContent=titles[id]||id;
@@ -2066,7 +2241,7 @@ function go(id){
   if(id==='fiado')rFiado();
   if(id==='usuarios')rUsers();
   if(id==='categorias')rCatGrid();
-  if(id==='marca'){if(me.rol!=='admin'){notify('⛔ Solo administradores');return}rMarca()}
+  if(id==='marca')rMarca();
   if(id==='cierre')rCierre();
   if(id==='finanzas'){rFinanzas();const ft=document.querySelector('.ftab');if(ft)finTab(ft,'resumen')}
   if(id==='proveedores')rProvs();
@@ -2083,7 +2258,8 @@ function rDash(){
   const totV=vh.reduce((a,v)=>a+v.total,0);
   const totFiado=vh.filter(v=>v.metodo==='Crédito').reduce((a,v)=>a+v.total,0);
   const totI=ingresos.filter(x=>x.f===h).reduce((a,x)=>a+x.monto,0);
-  const totG=gastosL.filter(x=>x.f===h).reduce((a,x)=>a+x.monto,0)+gastosP.filter(x=>x.f===h).reduce((a,x)=>a+x.monto,0);
+  const totG=gastosL.filter(x=>x.f===h).reduce((a,x)=>a+x.monto,0)
+    +(puede('gastosPersonal')?gastosP.filter(x=>x.f===h).reduce((a,x)=>a+x.monto,0):0);
   const low=prods.filter(p=>p.stock<10).length;
   document.getElementById('k-v').textContent=fmt(totV);
   // Ingreso real del día: ventas cobradas + otros ingresos + abonos. El fiado no entró.
@@ -2308,11 +2484,12 @@ function rInv(){
   const cf=document.getElementById('invCF');if(cf){const cv=cf.value;cf.innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>`<option value="${c}" ${c===cv?'selected':''}>${c}</option>`).join('')}
   el.innerHTML=filtered.length?filtered.map(p=>{
     const m=p.price>0?Math.round((p.price-(p.cost||0))/p.price*100):0,sc=p.stock<=0?'var(--red)':p.stock<10?'var(--amb)':'var(--grn)';
-    return `<tr><td style="font-size:11px;color:var(--t2);font-family:monospace">${p.id||'—'}</td><td><strong>${esc(p.e||'📦')} ${esc(p.name)}</strong></td><td><span class="bdg bpp">${esc(p.cat||'—')}</span></td><td>${fmt(p.cost||0)}</td><td><strong>${fmt(p.price)}</strong></td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:54px;height:6px;background:var(--pl);border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.min((p.stock/50)*100,100)}%;background:${sc};border-radius:3px"></div></div><span style="font-size:12px;font-weight:700;color:${sc}">${p.stock}</span></div></td><td><span style="font-weight:700;color:${m>40?'var(--grn)':m>25?'var(--amb)':'var(--red)'}">${m}%</span></td><td><div style="display:flex;gap:5px"><button class="btn bg bsm" onclick="edProd('${p.id}')">✏️</button><button class="btn bd bsm" onclick="delProd('${p.id}')">🗑️</button></div></td></tr>`;
-  }).join(''):'<tr><td colspan="8" class="empty-row">Sin productos — agrega el primero con el botón de arriba</td></tr>';
+    return `<tr><td style="font-size:11px;color:var(--t2);font-family:monospace">${p.id||'—'}</td><td><strong>${esc(p.e||'📦')} ${esc(p.name)}</strong></td><td><span class="bdg bpp">${esc(p.cat||'—')}</span></td><td class="col-costo">${fmt(p.cost||0)}</td><td><strong>${fmt(p.price)}</strong></td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:54px;height:6px;background:var(--pl);border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.min((p.stock/50)*100,100)}%;background:${sc};border-radius:3px"></div></div><span style="font-size:12px;font-weight:700;color:${sc}">${p.stock}</span></div></td><td class="col-costo"><span style="font-weight:700;color:${m>40?'var(--grn)':m>25?'var(--amb)':'var(--red)'}">${m}%</span></td><td>${puede('productos')?`<div style="display:flex;gap:5px"><button class="btn bg bsm" onclick="edProd('${p.id}')">✏️</button><button class="btn bd bsm" onclick="delProd('${p.id}')">🗑️</button></div>`:'<span style="font-size:11px;color:var(--t3)">—</span>'}</td></tr>`;
+  }).join(''):'<tr><td colspan="8" class="empty-row">Sin productos registrados</td></tr>';
+  aplicarPermisos();
 }
 function edProd(id){const p=prods.find(x=>x.id===id);if(p)openM('producto',p)}
-function delProd(id){if(!confirm('¿Eliminar este producto?'))return;prods=prods.filter(p=>p.id!==id);sv(K.p,prods);rInv();rDash();notify('🗑️ Producto eliminado')}
+function delProd(id){if(!exigir('productos','borrar productos'))return;if(!confirm('¿Eliminar este producto?'))return;prods=prods.filter(p=>p.id!==id);sv(K.p,prods);rInv();rDash();notify('🗑️ Producto eliminado')}
 
 // CATEGORÍAS
 const catClrs=['var(--p)','#6366f1','#f472b6','#38bdf8','#22c55e','#f59e0b','#ef4444'];
@@ -2322,11 +2499,11 @@ function rCatGrid(){
     return `<div class="cg-item"><div style="width:46px;height:46px;border-radius:13px;background:${clr}18;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:11px">${cEm(c)}</div><div style="font-size:15px;font-weight:800;color:var(--t);margin-bottom:3px">${c}</div><div style="font-size:12px;color:var(--t2);margin-bottom:14px">${n} producto${n!==1?'s':''}</div><div style="display:flex;gap:7px;align-items:center"><span style="background:${clr}15;color:${clr};font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px">✓ Activa</span><button style="background:rgba(239,68,68,.07);color:var(--red);border:none;border-radius:7px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--f)" onclick="delCat(decodeURIComponent('${encodeURIComponent(c)}'))">🗑️</button></div></div>`;
   }).join('')||'<p style="color:var(--t3);padding:20px;grid-column:1/-1;text-align:center">Sin categorías — crea la primera</p>';
 }
-function delCat(c){if(prods.find(p=>p.cat===c)){notify('⚠️ Esta categoría tiene productos asignados');return}if(!confirm(`¿Eliminar "${c}"?`))return;cats=cats.filter(x=>x!==c);sv(K.ct,cats);rCatGrid();notify('🗑️ Categoría eliminada')}
+function delCat(c){if(!exigir('categorias','borrar categorías'))return;if(prods.find(p=>p.cat===c)){notify('⚠️ Esta categoría tiene productos asignados');return}if(!confirm(`¿Eliminar "${c}"?`))return;cats=cats.filter(x=>x!==c);sv(K.ct,cats);rCatGrid();notify('🗑️ Categoría eliminada')}
 
 // PROVEEDORES
 function rProvs(){const el=document.getElementById('pvTbl');if(!el)return;el.innerHTML=provs.length?provs.map((p,i)=>`<tr><td style="font-family:monospace;font-size:11px">${esc(p.nit||'—')}</td><td><strong>${esc(p.nombre)}</strong></td><td>${esc(p.tel||'—')}</td><td>${esc(p.ciudad||'Bogotá')}</td><td><span class="bdg bgg">✓ Activo</span></td><td><button class="btn bd bsm" onclick="delProv(${i})">🗑️</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty-row">Sin proveedores registrados</td></tr>'}
-function delProv(i){if(!confirm('¿Eliminar?'))return;provs.splice(i,1);sv(K.pv,provs);rProvs();notify('🗑️ Eliminado')}
+function delProv(i){if(!exigir('proveedores','borrar proveedores'))return;if(!confirm('¿Eliminar?'))return;provs.splice(i,1);sv(K.pv,provs);rProvs();notify('🗑️ Eliminado')}
 
 // FINANZAS
 let finSec='resumen';
@@ -2336,6 +2513,7 @@ function finTab(el,sec){
   rFinanzas();
 }
 function rFinanzas(){
+  aplicarPermisos();
   const mes=mesActual(),ingM=ingresos.filter(x=>x.mes===mes),gloM=gastosL.filter(x=>x.mes===mes),gpeM=gastosP.filter(x=>x.mes===mes);
   const totI=ingM.reduce((a,x)=>a+x.monto,0),totGlo=gloM.reduce((a,x)=>a+x.monto,0),totGpe=gpeM.reduce((a,x)=>a+x.monto,0);
   const totVentas=ventas.filter(v=>{const d=new Date(v.ts||0);return `${d.getMonth()+1}/${d.getFullYear()}`===mes}).reduce((a,v)=>a+v.total,0);
@@ -2477,6 +2655,57 @@ function confirmarCierre(){
 function expCierres(){const csv=['Fecha,Cajero,Apertura,TotalVentas,Transacciones,Efectivo,Digital,Fiado,Abonos,Devoluciones,Gastos,IVA,Neto,EfectivoEsperado,EfectivoContado,Diferencia',...cierres.map(c=>csvFila([c.fecha,c.cajero,c.apertura||0,c.totalVentas,c.transacciones,c.efectivo,c.digital,c.fiado||0,c.abonos||0,c.devoluciones||0,c.totalGastos,c.ivaTotal||0,c.neto,c.esperado||'',c.contado==null?'':c.contado,c.diferencia==null?'':c.diferencia]))].join('\n');const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='cierres_historial.csv';a.click();notify('📤 Historial exportado')}
 
 // APERTURA CAJA
+const DIAS=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto',
+             'septiembre','octubre','noviembre','diciembre'];
+
+/* Al entrar, si la caja del día no está abierta, se pide primero.
+   Así el cajero no arranca a vender sin base y el cierre queda inservible. */
+function pedirAperturaCaja(){
+  const box=document.getElementById('aperBox');if(!box)return;
+  if(cajaActual&&cajaActual.abierta&&cajaActual.fecha===hoy())return;  // ya está abierta
+  if(cierres.find(c=>c.fecha===hoy()))return;                          // el día ya se cerró
+
+  const n=new Date();
+  document.getElementById('aperDia').textContent=DIAS[n.getDay()];
+  document.getElementById('aperFec').textContent=n.getDate()+' de '+MESES[n.getMonth()]+' de '+n.getFullYear();
+  document.getElementById('aperCajero').innerHTML='Cajero: <b>'
+    +esc(me?.nombre?.split(' ').slice(0,2).join(' ')||'—')+'</b>';
+
+  // Se propone la base del último cierre, que suele repetirse
+  const ult=cierres.length?cierres[cierres.length-1]:null;
+  const sugerido=(ult&&ult.apertura)||(cajaActual&&cajaActual.monto)||100000;
+  document.getElementById('aperMonto').value=Math.round(sugerido);
+
+  const av=document.getElementById('aperAviso');
+  if(ult&&ult.fecha!==hoy()){
+    av.textContent='El último cierre fue el '+ult.fecha
+      +(ult.diferencia!=null&&Math.abs(ult.diferencia)>100
+        ? ' y quedó con un descuadre de '+fmt(ult.diferencia) : ' y la caja cuadró.');
+  }else av.textContent='';
+
+  box.classList.add('on');
+  setTimeout(()=>{const i=document.getElementById('aperMonto');if(i){i.focus();i.select()}},250);
+}
+function aperFijar(v){
+  const i=document.getElementById('aperMonto');
+  if(i){i.value=v;i.focus()}
+}
+function aperConfirmar(){
+  const v=parseFloat(document.getElementById('aperMonto')?.value);
+  if(isNaN(v)||v<0){notify('⚠️ Escribe con cuánta plata arrancas');return}
+  const t=document.getElementById('aperTurno')?.value||'Completo';
+  document.getElementById('aperBox').classList.remove('on');
+  abrirCaja(v,t);
+  go('pos');
+}
+function aperSaltar(){
+  const msg=esAdmin()
+    ? '¿Entrar sin abrir la caja?\n\nPuedes abrirla después con el botón "Apertura Caja".'
+    : '⚠️ Si vendes sin abrir la caja, al cerrar el día el sistema NO va a poder decirte si cuadró.\n\n¿Entrar de todas formas?';
+  if(!confirm(msg))return;
+  document.getElementById('aperBox').classList.remove('on');
+}
 function abrirCaja(monto,turno){cajaActual={fecha:hoy(),monto:parseFloat(monto)||0,turno,cajero:me?.nombre?.split(' ').slice(0,2).join(' ')||'—',abierta:true,ts:Date.now()};sv(K.caja,cajaActual);clsM();notify(`🔓 Caja abierta con ${fmt(cajaActual.monto)} — Turno: ${turno}`);rCierre();rDash()}
 
 // CLIENTES
@@ -2484,9 +2713,42 @@ function rClis(){const el=document.getElementById('cliTbl');if(!el)return;el.inn
 function delCli(i){if(!confirm('¿Eliminar?'))return;clis.splice(i,1);sv(K.c,clis);rClis();notify('🗑️ Eliminado')}
 
 // USUARIOS
-function rUsers(){const el=document.getElementById('usrWr');if(!el)return;el.innerHTML=users.map(u=>`<div class="uc"><div class="uav ${u.rol}">${esc(u.nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase())}</div><div class="ui"><div class="un">${esc(u.nombre)}</div><div class="ur">${u.rol==='admin'?'👑 Administrador':'🛒 Vendedor'}</div><div class="um">Login: <strong>${esc(u.alias||u.nombre.split(' ')[0].toLowerCase())}</strong> · Creado: ${u.creado||'—'}</div></div><div style="display:flex;gap:8px;align-items:center"><span class="bdg ${u.activo!==false?'bgg':'brr'}">${u.activo!==false?'✓ Activo':'✗ Inactivo'}</span>${u.id!=='u1'?`<button class="btn bo bsm" onclick="togU('${u.id}')">${u.activo!==false?'Desactivar':'Activar'}</button><button class="btn bd bsm" onclick="delU('${u.id}')">🗑️</button>`:'<span style="font-size:10px;color:var(--t3)">Admin principal</span>'}</div></div>`).join('')}
-function togU(id){const u=users.find(x=>x.id===id);if(!u)return;u.activo=!u.activo;sv(K.u,users);rUsers();notify(`${u.activo?'✅ Activado':'⛔ Desactivado'}: ${esc(u.nombre)}`)}
-function delU(id){if(id==='u1'){notify('⛔ No puedes eliminar al admin principal');return}if(!confirm('¿Eliminar?'))return;users=users.filter(x=>x.id!==id);sv(K.u,users);rUsers();notify('🗑️ Eliminado')}
+function rUsers(){const el=document.getElementById('usrWr');if(!el)return;el.innerHTML=users.map(u=>`<div class="uc"><div class="uav ${u.rol}">${esc(u.nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase())}</div><div class="ui"><div class="un">${esc(u.nombre)}</div><div class="ur">${u.rol==='admin'?'👑 Administrador':'🛒 Vendedor'}</div><div class="um">Login: <strong>${esc(u.alias||u.nombre.split(' ')[0].toLowerCase())}</strong> · Creado: ${u.creado||'—'}</div></div><div style="display:flex;gap:8px;align-items:center"><span class="bdg ${u.activo!==false?'bgg':'brr'}">${u.activo!==false?'✓ Activo':'✗ Inactivo'}</span><button class="btn bo bsm" title="Cambiar contraseña" onclick="openM('resetClave','${u.id}')">🔑</button>${u.id!=='u1'?`<button class="btn bo bsm" onclick="togU('${u.id}')">${u.activo!==false?'Desactivar':'Activar'}</button><button class="btn bd bsm" onclick="delU('${u.id}')">🗑️</button>`:'<span style="font-size:10px;color:var(--t3)">Admin principal</span>'}</div></div>`).join('')}
+/* Reglas comunes: 6 caracteres mínimo y las dos escrituras iguales */
+function validarClaveNueva(){
+  const n=document.getElementById('pcNue')?.value||'';
+  const n2=document.getElementById('pcNue2')?.value||'';
+  if(n.length<6){notify('⚠️ La contraseña debe tener al menos 6 caracteres');return null}
+  if(n!==n2){notify('⚠️ Las dos contraseñas no coinciden');return null}
+  return n;
+}
+function cambiarMiClave(){
+  const act=document.getElementById('pcAct')?.value||'';
+  if(!verificaPass(me,act)){notify('❌ La contraseña actual no es correcta');return}
+  const n=validarClaveNueva();if(n===null)return;
+  const u=users.find(x=>x.id===me.id);if(!u){notify('⚠️ Usuario no encontrado');return}
+  u.password=hashPass(n);sv(K.u,users);me=u;
+  if(ESCRITORIO)window.posAPI.bitacora({usuario:me.nombre,accion:'cambio-clave',detalle:'propia'});
+  clsM();notify('✅ Contraseña cambiada. Anótala en un lugar seguro');
+}
+function cambiarClaveDe(id){
+  const u=users.find(x=>x.id===id);if(!u){notify('⚠️ Usuario no encontrado');return}
+  const esYo=me&&me.id===u.id;
+  if(esYo){
+    const act=document.getElementById('pcAct')?.value||'';
+    if(!verificaPass(me,act)){notify('❌ La contraseña actual no es correcta');return}
+  }else if(me.rol!=='admin'){
+    notify('⛔ Solo un administrador puede cambiar la contraseña de otro');return;
+  }
+  const n=validarClaveNueva();if(n===null)return;
+  u.password=hashPass(n);sv(K.u,users);
+  if(esYo)me=u;
+  if(ESCRITORIO)window.posAPI.bitacora({usuario:me.nombre,accion:'cambio-clave',detalle:u.nombre});
+  clsM();rUsers();notify('✅ Contraseña de "'+u.nombre+'" actualizada');
+}
+function togU(id){
+  if(!exigir('usuarios','activar o desactivar usuarios'))return;const u=users.find(x=>x.id===id);if(!u)return;u.activo=!u.activo;sv(K.u,users);rUsers();notify(`${u.activo?'✅ Activado':'⛔ Desactivado'}: ${esc(u.nombre)}`)}
+function delU(id){if(!exigir('usuarios','borrar usuarios'))return;if(id==='u1'){notify('⛔ No puedes eliminar al admin principal');return}if(!confirm('¿Eliminar?'))return;users=users.filter(x=>x.id!==id);sv(K.u,users);rUsers();notify('🗑️ Eliminado')}
 
 // CONFIG
 function loadCfg(){
@@ -2497,6 +2759,7 @@ function loadCfg(){
   const pos=document.getElementById('ivaOn');if(pos)pos.checked=cfg.ivaOn!==false;
 }
 function saveCfg(){
+  if(!exigir('config','cambiar la configuración'))return;
   cfg={n:document.getElementById('cfgN')?.value||cfg.n,i:document.getElementById('cfgI')?.value||'',d:document.getElementById('cfgD')?.value||cfg.d,t:document.getElementById('cfgT')?.value||'',f:document.getElementById('cfgF')?.value||cfg.f,ivaOn:document.getElementById('cfgIvaOn')?.checked!==false,ivaPct:parseFloat(document.getElementById('cfgIvaPct')?.value)||19,
     ivaIncl:document.getElementById('cfgIvaIncl')?.value==='si'};
   sv(K.cf,cfg);
@@ -2531,12 +2794,15 @@ async function calcSt(){
       +(d===null||d>7?'var(--red)':'var(--grn)')+'">'+resp+'</span>';
   }
 }
-function expAll(){const d={};Object.entries(K).forEach(([k,v])=>{d[k]=ld(v,null)});d[K_BRAND]=brand;d['pos_emojicat']=EMOJI_CAT;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download=(brand.nombre||'negocio').replace(/[^\w]+/g,'_').toLowerCase()+'_backup_'+hoy().replace(/\//g,'-')+'.json';a.click();sv('pos_ultbackup',Date.now());notify('📤 Respaldo exportado')}
-function impAll(){const inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.onchange=e=>{const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(typeof d!=='object')throw new Error();const permitidas=Object.values(K).concat([K_BRAND,'pos_emojicat','mce_dev','pos_abonos','pos_setup']);
+function expAll(){
+  if(!exigir('exportar','exportar la información'))return;const d={};Object.entries(K).forEach(([k,v])=>{d[k]=ld(v,null)});d[K_BRAND]=brand;d['pos_emojicat']=EMOJI_CAT;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download=(brand.nombre||'negocio').replace(/[^\w]+/g,'_').toLowerCase()+'_backup_'+hoy().replace(/\//g,'-')+'.json';a.click();sv('pos_ultbackup',Date.now());notify('📤 Respaldo exportado')}
+function impAll(){
+  if(!exigir('exportar','importar información'))return;const inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.onchange=e=>{const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(typeof d!=='object')throw new Error();const permitidas=Object.values(K).concat([K_BRAND,'pos_emojicat','mce_dev','pos_abonos','pos_setup']);
         let n=0;Object.entries(d).forEach(([k,v])=>{if(k&&v!==null&&permitidas.indexOf(k)>=0){sv(k,v);n++}});
         if(!n)throw new Error('vacío');
         setTimeout(()=>location.reload(),600)}catch{notify('❌ Archivo inválido')}};r.readAsText(e.target.files[0])};inp.click()}
 async function clrAll(){
+  if(!exigir('borrarDatos','borrar los datos'))return;
   if(!confirm('⚠️ ¿Borrar TODOS los datos de este negocio?\n\nSe pierden ventas, inventario, clientes y cartera.'))return;
   if(!confirm('Esto no se puede deshacer.\n\n¿Descargaste el respaldo antes?'))return;
   if(ESCRITORIO){
@@ -2653,6 +2919,36 @@ ${ya?`<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94
 <div class="mf"><label class="ml">Razón Social *</label><input class="mi" id="mPvNm" placeholder="Nombre de la empresa"></div>
 <div class="mf"><label class="ml">Ciudad</label><input class="mi" id="mPvCi" value="Bogotá"></div>
 <div class="mfoo"><button class="btn bp" onclick="sbProv()">✅ Guardar</button><button class="btn bo" onclick="clsM()">Cancelar</button></div>`;
+  }else if(type==='miClave'){
+    html=`<div class="mtt">🔑 Cambiar mi contraseña</div>
+<div style="background:var(--px);border-radius:10px;padding:12px;margin-bottom:16px">
+  <p style="font-size:13px;color:var(--t)">Usuario: <strong>${esc(me.nombre)}</strong></p>
+</div>
+<div class="mf"><label class="ml">Contraseña actual *</label><input class="mi" id="pcAct" type="password" autocomplete="current-password"></div>
+<div class="mf"><label class="ml">Contraseña nueva * (mínimo 6 caracteres)</label><input class="mi" id="pcNue" type="password" autocomplete="new-password"></div>
+<div class="mf"><label class="ml">Repite la nueva *</label><input class="mi" id="pcNue2" type="password" autocomplete="new-password"></div>
+<p style="font-size:12px;color:var(--red);font-weight:600;margin-bottom:6px">⚠️ Anótala. No hay forma de recuperarla sin el código de recuperación.</p>
+<div class="mfoo">
+  <button class="btn bp" onclick="cambiarMiClave()">🔑 Cambiar contraseña</button>
+  <button class="btn bo" onclick="clsM()">Cancelar</button>
+</div>`;
+  }else if(type==='resetClave'){
+    const u=users.find(x=>x.id===data);
+    if(!u){notify('⚠️ Usuario no encontrado');return}
+    const esYo=me&&me.id===u.id;
+    html=`<div class="mtt">🔑 ${esYo?'Cambiar mi contraseña':'Asignar contraseña nueva'}</div>
+<div style="background:var(--px);border-radius:10px;padding:12px;margin-bottom:16px">
+  <p style="font-size:13px;color:var(--t)">Usuario: <strong>${esc(u.nombre)}</strong>
+  <span style="color:var(--t2)">· entra como <b>${esc(u.alias||'')}</b></span></p>
+</div>
+${esYo?'<div class="mf"><label class="ml">Tu contraseña actual *</label><input class="mi" id="pcAct" type="password"></div>':''}
+<div class="mf"><label class="ml">Contraseña nueva * (mínimo 6 caracteres)</label><input class="mi" id="pcNue" type="password"></div>
+<div class="mf"><label class="ml">Repite la nueva *</label><input class="mi" id="pcNue2" type="password"></div>
+${!esYo?'<p style="font-size:12px;color:var(--t2);margin-bottom:6px">Dísela al usuario y pídele que la cambie él mismo después.</p>':''}
+<div class="mfoo">
+  <button class="btn bp" onclick="cambiarClaveDe(decodeURIComponent('${encodeURIComponent(u.id)}'))">🔑 Guardar</button>
+  <button class="btn bo" onclick="clsM()">Cancelar</button>
+</div>`;
   }else if(type==='abono'){
     const nombre=data;const saldo=saldoCliente(nombre);
     html=`<div class="mtt">💵 Registrar Abono</div>
@@ -2698,7 +2994,7 @@ ${disp<=0?'<p style="color:var(--red);font-size:13px;font-weight:600;margin-bott
   </select></div>
 <div class="mf"><label class="ml">Tipo de resolución</label>
   <select class="ms" id="devTipoRes" onchange="devAvisoCaja()">
-    <option value="Reembolso">💵 Reembolso en efectivo</option>
+    ${puede('reembolso')?'<option value="Reembolso">💵 Reembolso en efectivo</option>':''}
     <option value="Cambio">🔄 Cambio por otro producto</option>
     <option value="Credito">🎫 Nota crédito para próxima compra</option>
   </select>
@@ -2722,6 +3018,7 @@ ${disp<=0?'<p style="color:var(--red);font-size:13px;font-weight:600;margin-bott
 function clsM(e){if(!e||e.target.id==='mBg')document.getElementById('mBg').classList.remove('op')}
 
 function sbProd(eid){
+  if(!exigir('productos','crear o editar productos'))return;
   const nm=(document.getElementById('mPn')?.value||'').trim();
   // el código viaja dentro de atributos onclick: se restringe a caracteres seguros
   let id=(document.getElementById('mPid')?.value||'').trim().replace(/[^A-Za-z0-9_.\-]/g,'');
@@ -2736,8 +3033,10 @@ function sbProd(eid){
   const prod={id:eid||id,name:nm,e,cat,stock:stk,cost,price};const idx=prods.findIndex(p=>p.id===prod.id);
   if(idx>=0)prods[idx]=prod;else prods.push(prod);sv(K.p,prods);clsM();rInv();rDash();notify(`✅ "${nm}" ${eid?'actualizado':'guardado'}`);
 }
-function sbCat(){const nm=(document.getElementById('mCn')?.value||'').trim();if(!nm){notify('⚠️ Escribe el nombre');return}if(cats.includes(nm)){notify('⚠️ Ya existe');return}cats.push(nm);sv(K.ct,cats);clsM();rCatGrid();notify(`✅ Categoría "${nm}" creada`)}
+function sbCat(){
+  if(!exigir('categorias','crear categorías'))return;const nm=(document.getElementById('mCn')?.value||'').trim();if(!nm){notify('⚠️ Escribe el nombre');return}if(cats.includes(nm)){notify('⚠️ Ya existe');return}cats.push(nm);sv(K.ct,cats);clsM();rCatGrid();notify(`✅ Categoría "${nm}" creada`)}
 function sbUser(){
+  if(!exigir('usuarios','crear usuarios'))return;
   const nm=(document.getElementById('mUn')?.value||'').trim(),alias=(document.getElementById('mUa')?.value||'').trim().toLowerCase().replace(/\s/g,''),pw=document.getElementById('mUp')?.value||'',rl=document.getElementById('mUr')?.value||'vendedor';
   if(!nm){notify('⚠️ El nombre es obligatorio');return}if(!pw||pw.length<6){notify('⚠️ Contraseña mínimo 6 caracteres');return}if(users.find(u=>u.nombre.toLowerCase()===nm.toLowerCase())){notify('⚠️ Ya existe un usuario con ese nombre');return}
   const newU={id:'u'+Date.now(),nombre:nm,alias:alias||nm.split(' ')[0].toLowerCase(),password:hashPass(pw),rol:rl,activo:true,creado:hoy()};
@@ -2747,7 +3046,8 @@ function sbIng(){const concepto=(document.getElementById('mIn')?.value||'').trim
 function sbGasto(){const desc=(document.getElementById('mGd')?.value||'').trim(),cat=document.getElementById('mGc')?.value||'Otro',monto=parseFloat(document.getElementById('mGm')?.value)||0,tipo=document.getElementById('mGtipo')?.value||'local',resp=(document.getElementById('mGr')?.value||'').trim();if(!desc){notify('⚠️ Escribe la descripción');return}if(monto<=0){notify('⚠️ El monto debe ser mayor a $0');return}const metodo=document.getElementById('mGmet')?.value||'Efectivo';
   const reg={desc,cat,monto,metodo,f:hoy(),mes:mesActual(),ts:Date.now(),resp};if(tipo==='local'){gastosL.push(reg);sv(K.glo,gastosL)}else{gastosP.push(reg);sv(K.gpe,gastosP)}clsM();rFinanzas();rDash();notify(`✅ Gasto de ${fmt(monto)} registrado`)}
 function sbCli(){const nm=(document.getElementById('mCnm')?.value||'').trim();if(!nm){notify('⚠️ El nombre es obligatorio');return}clis.push({nombre:nm,cc:(document.getElementById('mCc')?.value||'').trim(),tel:(document.getElementById('mCt')?.value||'').trim(),tipo:document.getElementById('mCtip')?.value||'Regular'});sv(K.c,clis);clsM();rClis();notify(`✅ "${nm}" registrado`)}
-function sbProv(){const nm=(document.getElementById('mPvNm')?.value||'').trim();if(!nm){notify('⚠️ El nombre es obligatorio');return}provs.push({nombre:nm,nit:(document.getElementById('mPvN')?.value||'').trim(),tel:(document.getElementById('mPvT')?.value||'').trim(),ciudad:(document.getElementById('mPvCi')?.value||'Bogotá').trim()});sv(K.pv,provs);clsM();rProvs();notify(`✅ "${nm}" registrado`)}
+function sbProv(){
+  if(!exigir('proveedores','registrar proveedores'))return;const nm=(document.getElementById('mPvNm')?.value||'').trim();if(!nm){notify('⚠️ El nombre es obligatorio');return}provs.push({nombre:nm,nit:(document.getElementById('mPvN')?.value||'').trim(),tel:(document.getElementById('mPvT')?.value||'').trim(),ciudad:(document.getElementById('mPvCi')?.value||'Bogotá').trim()});sv(K.pv,provs);clsM();rProvs();notify(`✅ "${nm}" registrado`)}
 
 // NOTIF
 let _nt;
@@ -2869,12 +3169,18 @@ function devCalcValor(precio){
 function devAvisoCaja(){
   const t=document.getElementById('devTipoRes')?.value;
   const el=document.getElementById('devAviso');if(!el)return;
+  if(!puede('reembolso')&&t!=='Reembolso'){el.style.color='var(--t2)';
+    el.textContent=(t==='Cambio'?'🔄 No mueve la caja: el cliente se lleva otro producto del mismo valor.'
+      :'🎫 No mueve la caja hoy: queda un saldo a favor del cliente.');return}
   if(t==='Reembolso'){el.style.color='var(--red)';el.textContent='💵 Sale plata de la caja: se descuenta del efectivo del día.'}
   else if(t==='Cambio'){el.style.color='var(--t2)';el.textContent='🔄 No mueve la caja: el cliente se lleva otro producto del mismo valor.'}
   else{el.style.color='var(--t2)';el.textContent='🎫 No mueve la caja hoy: queda un saldo a favor del cliente.'}
 }
 function registrarDevolucion(ticketId,producto,valorUnit,emoji,motivo,tipo,pid){
   if(!motivo){notify('⚠️ Selecciona el motivo');return}
+  if(tipo==='Reembolso'&&!puede('reembolso')){
+    notify('⛔ Solo un administrador puede devolver dinero en efectivo');return;
+  }
   const qty=parseInt(document.getElementById('devQty')?.value)||0;
   if(qty<=0){notify('⚠️ Indica cuántas unidades devuelve');return}
   const reintegra=document.getElementById('devReintegra')?.checked!==false;
@@ -3088,6 +3394,53 @@ function expFiado(){
   notify('📤 Cartera exportada');
 }
 
+/* ══ APP DE ANDROID: BOTÓN ATRÁS ══
+   Sin esto, el boton fisico de atras cierra la aplicacion de golpe,
+   incluso con una venta a medias. */
+const EN_APP = !!(typeof window!=='undefined' && (window.Capacitor ||
+                 window.matchMedia('(display-mode: standalone)').matches));
+
+function manejarAtras(){
+  // 1. Si hay una ventana emergente abierta, se cierra esa
+  const mb=document.getElementById('mBg');
+  if(mb && mb.classList.contains('op')){ clsM(); return true; }
+  const tk=document.getElementById('tkBg');
+  if(tk && tk.classList.contains('op')){ tk.classList.remove('op'); return true; }
+  // 2. Si el menu lateral esta abierto, se cierra
+  const sb=document.getElementById('sbEl');
+  if(sb && sb.classList.contains('abierto')){ cerrarMenu(); return true; }
+  // 3. Si hay algo en el carrito, se avisa antes de salir de la venta
+  const enPos=document.getElementById('pn-pos')?.classList.contains('on');
+  if(enPos && cart.length){
+    if(!confirm('Hay '+cart.length+' producto(s) en el carrito. ¿Salir del punto de venta?')) return true;
+    clrCart();
+  }
+  // 4. Si no esta en el tablero, vuelve al tablero
+  const actual=document.querySelector('.pn.on');
+  if(me && actual && actual.id!=='pn-dashboard'){ go('dashboard'); return true; }
+  return false;   // nada que cerrar: puede salir
+}
+
+function activarBotonAtras(){
+  if(!EN_APP) return;
+  const App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+  if(App && App.addListener){
+    App.addListener('backButton', () => {
+      if(manejarAtras()) return;
+      if(confirm('¿Cerrar la aplicación?')) App.exitApp();
+    });
+    return;
+  }
+  // Sin el complemento: se atrapa el historial del navegador
+  try{
+    history.pushState({pos:1},'');
+    window.addEventListener('popstate', () => {
+      history.pushState({pos:1},'');
+      manejarAtras();
+    });
+  }catch(e){}
+}
+
 /* ══ MENÚ Y PESTAÑAS EN PANTALLA PEQUEÑA ══ */
 function esMovil(){ return window.matchMedia('(max-width: 860px)').matches; }
 function toggleMenu(){
@@ -3180,6 +3533,45 @@ function wzIr(d){
   document.getElementById('wzBack').style.visibility = wzPaso===1 ? 'hidden' : 'visible';
   document.getElementById('wzNext').textContent = wzPaso===3 ? '✓ Empezar a vender' : 'Continuar →';
 }
+/* Código de 12 caracteres en grupos de 4, sin letras que se confundan */
+function generarCodigoRecuperacion(){
+  const abc='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // sin I, O, 0, 1
+  let c='';
+  for(let i=0;i<12;i++){
+    if(i&&i%4===0)c+='-';
+    c+=abc[Math.floor(Math.random()*abc.length)];
+  }
+  return c;
+}
+function mostrarCodigoRecuperacion(codigo, usuario){
+  const el=document.getElementById('recBox');if(!el)return;
+  document.getElementById('recCodigo').textContent=codigo;
+  document.getElementById('recUsuario').textContent=usuario;
+  el.classList.add('on');
+}
+function cerrarCodigoRecuperacion(){
+  const ch=document.getElementById('recCheck');
+  if(ch&&!ch.checked){notify('⚠️ Confirma que anotaste el código');return}
+  document.getElementById('recBox')?.classList.remove('on');
+}
+function imprimirCodigo(){
+  const c=document.getElementById('recCodigo')?.textContent||'';
+  const u=document.getElementById('recUsuario')?.textContent||'';
+  document.getElementById('tkBox').innerHTML=`
+    <div class="tkh"><div class="tkl">${esc(brand.logoEmoji||'')} ${esc(brand.nombre||'')}</div>
+      <div class="tks">CÓDIGO DE RECUPERACIÓN</div></div>
+    <div class="tkb"><hr class="tkdiv">
+      <div class="tki"><span>Usuario</span><span><b>${esc(u)}</b></span></div>
+      <hr class="tkdiv">
+      <div style="text-align:center;font-size:15px;font-weight:800;letter-spacing:2px;margin:10px 0">${esc(c)}</div>
+      <hr class="tkdiv">
+      <div style="font-size:10px;line-height:1.5">Guarde este papel en un lugar seguro y fuera del
+      computador. Es la única forma de volver a entrar si olvida su contraseña.</div>
+    </div>
+    <div class="tkf">${esc(hoy())}</div>`;
+  document.getElementById('tkBg').classList.add('op');
+}
+
 function wzValida(paso){
   const err = document.getElementById('wzErr');
   const v = id => (document.getElementById(id)?.value||'').trim();
@@ -3219,6 +3611,12 @@ function wzFinalizar(){
 
   sv('pos_setup', new Date().toISOString());
   registrarInstalacion(installId, brand.nombre);
+
+  // Código de recuperación: única forma de volver a entrar si se pierde la clave
+  const codigo = generarCodigoRecuperacion();
+  sv('pos_recuperacion', hashPass('rec.' + codigo));
+
+  mostrarCodigoRecuperacion(codigo, v('wzAdmU').toLowerCase());
 
   document.getElementById('wz').classList.remove('on');
   const lo2 = document.getElementById('lo');
@@ -3321,6 +3719,7 @@ function mostrarSelectorInstalacion(reg, res){
   // El nombre del negocio identifica la instalación en el selector
   if(brand.nombre) registrarInstalacion(installId, brand.nombre);
 
+  activarBotonAtras();
   if(ESCRITORIO){
     const b=document.getElementById('btnCarpetaResp');if(b)b.style.display='block';
     document.body.classList.add('app-escritorio');
