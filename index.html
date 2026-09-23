@@ -550,7 +550,7 @@ input[type=range]{accent-color:var(--p)}
     <input class="mi" id="dlgIn" autocomplete="off" onkeydown="if(event.key==='Enter')dlgAceptar();if(event.key==='Escape')dlgCancelar()">
     <div class="dlg-e" id="dlgErr"></div>
     <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn bo" style="flex:1" onclick="dlgCancelar()">Cancelar</button>
+      <button class="btn bo" style="flex:1" id="dlgNo" onclick="dlgCancelar()">Cancelar</button>
       <button class="btn bp" style="flex:1" id="dlgOk" onclick="dlgAceptar()">Aceptar</button>
     </div>
   </div>
@@ -1300,7 +1300,7 @@ const COLECCIONES = {
 };
 const STORES = ['kv', ...Object.values(COLECCIONES).map(c => c.store)];
 
-const VERSION_POS = '7.0.2';
+const VERSION_POS = '7.0.3';
 function versionActual(){
   if(ESCRITORIO && INFO_APP && INFO_APP.version) return INFO_APP.version;
   return VERSION_POS;
@@ -2141,14 +2141,14 @@ function bSubirImg(input, campo, maxPx){
 }
 
 /* Aplica una plantilla de rubro completa */
-function bRubro(k){
+async function bRubro(k){
   const r = RUBROS[k];
   if(!r) return;
   const hayProds = prods.length > 0;
   const msg = hayProds
     ? 'Se aplicarán los colores y textos de "'+r.n+'".\n\nTus productos y ventas NO se tocan. Las categorías del rubro se agregarán a las que ya tienes.\n\n¿Continuar?'
     : 'Se aplicará la plantilla "'+r.n+'" con sus colores y categorías.\n\n¿Continuar?';
-  if(!confirm(msg)) return;
+  if(!await confirmar(msg, { titulo:'Aplicar plantilla', boton:'Sí, aplicar' })) return;
 
   brand.rubro = k;
   brand.primario = r.p;
@@ -2201,9 +2201,9 @@ function impMarca(){
   };
   inp.click();
 }
-function resetMarca(){
+async function resetMarca(){
   if(!exigir('marca','cambiar la personalización'))return;
-  if(!confirm('¿Restaurar el diseño original? Tus datos de ventas e inventario no se tocan.')) return;
+  if(!await confirmar('¿Restaurar el diseño original? Tus datos de ventas e inventario no se tocan.', { titulo:'Restaurar diseño', boton:'Sí, restaurar' })) return;
   brand = Object.assign({}, BRAND_DEF);
   saveBrand(); applyTheme(); rMarca();
   notify('↺ Diseño restaurado');
@@ -2262,6 +2262,11 @@ function pedirTexto(o){
     document.getElementById('dlgErr').textContent = '';
     const i = document.getElementById('dlgIn');
     i.type = o.tipo || 'text'; i.value = o.valor || ''; i.placeholder = o.placeholder || '';
+    i.style.display = o.sinCampo ? 'none' : '';
+    const no = document.getElementById('dlgNo');
+    if(no){ no.style.display = o.sinCancelar ? 'none' : ''; no.textContent = o.cancelar || 'Cancelar'; }
+    const ok = document.getElementById('dlgOk');
+    ok.className = 'btn ' + (o.peligro ? 'bd' : 'bp');
     const rap = document.getElementById('dlgRap');
     if(rap){
       const lista = (o.rapidos || []).filter(r => !o.validar || !o.validar(String(r.v)));
@@ -2270,7 +2275,7 @@ function pedirTexto(o){
       rap.classList.toggle('on', lista.length > 0);
     }
     document.getElementById('dlgBox').classList.add('on');
-    setTimeout(() => i.focus(), 80);
+    setTimeout(() => (o.sinCampo ? document.getElementById('dlgOk') : i).focus(), 80);
   });
 }
 function dlgAceptar(){
@@ -2281,6 +2286,20 @@ function dlgAceptar(){
   const r = DLG.res; DLG = null;
   document.getElementById('dlgBox').classList.remove('on');
   r(v);
+}
+/* Las preguntas de "sí o no" y los avisos usan ESTA ventana, no la del
+   sistema: en Windows el cuadro nativo podía quedar detrás del programa y
+   parecía que se trababa (no dejaba escribir hasta cerrarlo a ciegas). */
+function confirmar(texto, o){
+  o = o || {};
+  return pedirTexto({ icono: o.icono || '❓', titulo: o.titulo || 'Confirma', texto,
+    boton: o.boton || 'Sí, continuar', cancelar: o.cancelar || 'Cancelar', sinCampo: true, peligro: o.peligro })
+    .then(v => v !== null);
+}
+function avisar(texto, o){
+  o = o || {};
+  return pedirTexto({ icono: o.icono || 'ℹ️', titulo: o.titulo || 'Aviso', texto,
+    boton: o.boton || 'Entendido', sinCampo: true, sinCancelar: true }).then(() => {});
 }
 function dlgCancelar(){
   if(!DLG) return;
@@ -2434,8 +2453,9 @@ async function desactivarConClave(clave){
   if(!r.ok){ if(err) err.innerHTML = txt[r.motivo] || '❌ Clave no válida'; return; }
   if(LIC.datos && LIC.datos.f && r.datos.f < LIC.datos.f){ if(err) err.innerHTML = '❌ Esta clave de desactivación es anterior a la licencia actual. Pide una nueva.'; return; }
   const borrar = !!r.datos.r;
-  if(!confirm('Esta clave DESACTIVA la licencia de este equipo.\n\nEl programa vuelve a modo demostración (' + LIMITE_DEMO + ' ventas).'
-    + (borrar ? '\n\nTambién se BORRAN las ventas, productos y clientes para empezar de cero.' : '\n\nLas ventas, productos y clientes se conservan.') + '\n\n¿Continuar?')) return;
+  if(!await confirmar('Esta clave DESACTIVA la licencia de este equipo.\n\nEl programa vuelve a modo demostración (' + LIMITE_DEMO + ' ventas).'
+    + (borrar ? '\n\nTambién se BORRAN las ventas, productos y clientes para empezar de cero.' : '\n\nLas ventas, productos y clientes se conservan.'),
+    { icono:'🔓', titulo:'Desactivar la licencia', boton:'Sí, desactivar', peligro:true })) return;
   if(ESCRITORIO && window.posAPI.quitarLicencia){
     const g = window.posAPI.quitarLicencia(clave);
     if(!g || !g.ok){ if(err) err.textContent = '❌ ' + ((g && g.error) || 'No se pudo desactivar'); return; }
@@ -2642,9 +2662,9 @@ async function activarLicencia(){
 async function olvideClave(){
   const guardado = ld('pos_recuperacion', null);
   if(!guardado){
-    alert('Esta instalación no tiene código de recuperación.\n\n'
+    await avisar('Esta instalación no tiene código de recuperación.\n\n'
         + 'Comunícate con quien te instaló el sistema: se puede recuperar el '
-        + 'acceso sin perder la información.');
+        + 'acceso sin perder la información.', { icono:'🔑', titulo:'Sin código de recuperación' });
     return;
   }
   const cod = await pedirTexto({ icono:'🔑', titulo:'Recuperar acceso',
@@ -2661,21 +2681,21 @@ async function olvideClave(){
     validar: v => v === nueva ? '' : 'Las dos contraseñas no coinciden.' });
   if(rep2 === null) return;
   const admin = users.find(u => u.rol === 'admin' && u.activo !== false) || users[0];
-  if(!admin){ alert('No hay usuario administrador en esta instalación.'); return; }
+  if(!admin){ await avisar('No hay usuario administrador en esta instalación.', { icono:'⚠️', titulo:'Sin administrador' }); return; }
   admin.password = hashPass(nueva);
   sv(K.u, users);
   // El código usado se invalida y se entrega uno nuevo
   const nuevoCod = generarCodigoRecuperacion();
   sv('pos_recuperacion', hashPass('rec.' + nuevoCod));
-  alert('✅ Listo. Entra con:\n\n'
+  await avisar('Listo. Entra con:\n\n'
       + 'Usuario: ' + (admin.alias || admin.nombre.split(' ')[0].toLowerCase()) + '\n'
       + 'Contraseña: la que acabas de escribir\n\n'
       + 'TU CÓDIGO NUEVO DE RECUPERACIÓN ES:\n\n     ' + nuevoCod + '\n\n'
-      + 'Anótalo: el anterior ya no sirve.');
+      + 'Anótalo: el anterior ya no sirve.', { icono:'✅', titulo:'Acceso recuperado' });
   const lu = document.getElementById('lU');
   if(lu) lu.value = admin.alias || admin.nombre.split(' ')[0].toLowerCase();
 }
-function logout(){if(!confirm('¿Deseas cerrar sesión?'))return;me=null;document.getElementById('app').style.display='none';document.getElementById('lo').classList.remove('hid');document.getElementById('lU').value='';document.getElementById('lP').value=''}
+async function logout(){if(!await confirmar('¿Deseas cerrar sesión?',{icono:'🚪',titulo:'Cerrar sesión',boton:'Sí, salir'}))return;me=null;document.getElementById('app').style.display='none';document.getElementById('lo').classList.remove('hid');document.getElementById('lU').value='';document.getElementById('lP').value=''}
 function initApp(){
   const ini=me.nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('sbAv').textContent=ini;
@@ -2932,6 +2952,25 @@ function leerNumero(t){
   if(/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(t)) t = t.replace(/\./g, '');   // 1.500,5
   return parseFloat(t.replace(',', '.'));
 }
+/* Código automático: consecutivo por categoría (ABA-001, LAC-002…).
+   Si el producto trae código de barras, se escribe encima y manda ese. */
+function prefijoCat(c){
+  const base = String(c || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return base.slice(0, 3) || 'GEN';
+}
+function codigoSugerido(cat){
+  const pre = prefijoCat(cat), re = new RegExp('^' + pre + '-(\\d{3,})$');
+  let n = 0;
+  prods.forEach(p => { const m = re.exec(String(p.id || '')); if(m) n = Math.max(n, parseInt(m[1], 10)); });
+  let cod, k = n + 1;
+  do { cod = pre + '-' + String(k).padStart(3, '0'); k++; } while(prods.some(p => p.id === cod));
+  return cod;
+}
+function ponerCodigoSugerido(){
+  const i = document.getElementById('mPid'), c = document.getElementById('mPc');
+  if(!i || !c || i.readOnly || i.dataset.manual === '1') return;
+  i.value = codigoSugerido(c.value); i.dataset.manual = '0';
+}
 function unidadPorCategoria(){
   const r = RUBROS[brand.rubro] || {}, c = document.getElementById('mPc')?.value, u = document.getElementById('mPu');
   if(!u) return;
@@ -3069,12 +3108,12 @@ function calcCambio(){
 }
 
 // COBRAR
-function cobrar(){
+async function cobrar(){
   if(!cart.length){notify('⚠️ El carrito está vacío');return}
   if(!licPermiteVender()){abrirLicencia(LIC.motivo==='vencida'?'vencida':'limite');return}
   setTimeout(pintarLicencia,50);
   if(!payM){notify('⚠️ Selecciona un método de pago');return}
-  if(!cajaActual||!cajaActual.abierta){if(!confirm('⚠️ La caja no está abierta. ¿Continuar de todas formas?'))return}
+  if(!cajaActual||!cajaActual.abierta){if(!await confirmar('La caja no está abierta. ¿Continuar de todas formas?',{icono:'⚠️',titulo:'Caja cerrada',boton:'Sí, continuar'}))return}
   aplicarPrecios();
   const items=cart.map(i=>{const pr=prods.find(x=>x.id===i.id);const o={name:i.name,qty:i.qty,price:i.price,e:i.e||'📦',id:i.id,cat:i.cat||'',costo:(pr?pr.cost:i.cost)||0};if(esFraccion(i))o.u=i.u;if(i.may)o.may=true;return o});
   const sub=items.reduce((a,i)=>a+i.price*i.qty,0);
@@ -3159,7 +3198,7 @@ function rInv(){
   aplicarPermisos();
 }
 function edProd(id){const p=prods.find(x=>x.id===id);if(p)openM('producto',p)}
-function delProd(id){if(!exigir('productos','borrar productos'))return;if(!confirm('¿Eliminar este producto?'))return;prods=prods.filter(p=>p.id!==id);sv(K.p,prods);rInv();rDash();notify('🗑️ Producto eliminado')}
+async function delProd(id){if(!exigir('productos','borrar productos'))return;const px=prods.find(p=>p.id===id);if(!await confirmar('¿Eliminar "'+(px?px.name:'')+'" del inventario?\n\nLas ventas ya hechas no cambian.',{icono:'🗑️',titulo:'Eliminar producto',boton:'Sí, eliminar',peligro:true}))return;prods=prods.filter(p=>p.id!==id);sv(K.p,prods);rInv();rDash();notify('🗑️ Producto eliminado')}
 
 // CATEGORÍAS
 const catClrs=['var(--p)','#6366f1','#f472b6','#38bdf8','#22c55e','#f59e0b','#ef4444'];
@@ -3169,11 +3208,11 @@ function rCatGrid(){
     return `<div class="cg-item"><div style="width:46px;height:46px;border-radius:13px;background:${clr}18;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:11px">${cEm(c)}</div><div style="font-size:15px;font-weight:800;color:var(--t);margin-bottom:3px">${c}</div><div style="font-size:12px;color:var(--t2);margin-bottom:14px">${n} producto${n!==1?'s':''}</div><div style="display:flex;gap:7px;align-items:center"><span style="background:${clr}15;color:${clr};font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px">✓ Activa</span><button style="background:rgba(239,68,68,.07);color:var(--red);border:none;border-radius:7px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--f)" onclick="delCat(decodeURIComponent('${encodeURIComponent(c)}'))">🗑️</button></div></div>`;
   }).join('')||'<p style="color:var(--t3);padding:20px;grid-column:1/-1;text-align:center">Sin categorías — crea la primera</p>';
 }
-function delCat(c){if(!exigir('categorias','borrar categorías'))return;if(prods.find(p=>p.cat===c)){notify('⚠️ Esta categoría tiene productos asignados');return}if(!confirm(`¿Eliminar "${c}"?`))return;cats=cats.filter(x=>x!==c);sv(K.ct,cats);rCatGrid();notify('🗑️ Categoría eliminada')}
+async function delCat(c){if(!exigir('categorias','borrar categorías'))return;if(prods.find(p=>p.cat===c)){notify('⚠️ Esta categoría tiene productos asignados');return}if(!await confirmar('¿Eliminar la categoría "'+c+'"?',{icono:'🗑️',titulo:'Eliminar categoría',boton:'Sí, eliminar',peligro:true}))return;cats=cats.filter(x=>x!==c);sv(K.ct,cats);rCatGrid();notify('🗑️ Categoría eliminada')}
 
 // PROVEEDORES
 function rProvs(){const el=document.getElementById('pvTbl');if(!el)return;el.innerHTML=provs.length?provs.map((p,i)=>`<tr><td style="font-family:monospace;font-size:11px">${esc(p.nit||'—')}</td><td><strong>${esc(p.nombre)}</strong></td><td>${esc(p.tel||'—')}</td><td>${esc(p.ciudad||'Bogotá')}</td><td><span class="bdg bgg">✓ Activo</span></td><td><button class="btn bd bsm" onclick="delProv(${i})">🗑️</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty-row">Sin proveedores registrados</td></tr>'}
-function delProv(i){if(!exigir('proveedores','borrar proveedores'))return;if(!confirm('¿Eliminar?'))return;provs.splice(i,1);sv(K.pv,provs);rProvs();notify('🗑️ Eliminado')}
+async function delProv(i){if(!exigir('proveedores','borrar proveedores'))return;if(!await confirmar('¿Eliminar este proveedor?',{icono:'🗑️',titulo:'Eliminar proveedor',boton:'Sí, eliminar',peligro:true}))return;provs.splice(i,1);sv(K.pv,provs);rProvs();notify('🗑️ Eliminado')}
 
 // FINANZAS
 let finSec='resumen';
@@ -3194,14 +3233,14 @@ function rFinanzas(){
   const bal=document.getElementById('fin-balance');
   if(bal){const neto=(totI+totVentas)-(totGlo+totGpe);bal.innerHTML=`<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:10px"><span style="color:var(--t2)">Total ingresos</span><span class="monto-ing">${fmt(totI+totVentas)}</span></div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:10px"><span style="color:var(--t2)">Gastos local</span><span class="monto-gas">-${fmt(totGlo)}</span></div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:14px"><span style="color:var(--t2)">Gastos personales</span><span style="color:var(--p);font-weight:700">-${fmt(totGpe)}</span></div><div style="background:${neto>=0?'rgba(34,197,94,.08)':'rgba(239,68,68,.08)'};border-radius:11px;padding:13px 16px;display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:${neto>=0?'#16a34a':'var(--red)'}"><span>Balance neto</span><span>${neto>=0?'+':''}${fmt(neto)}</span></div>`}
   const ultEl=document.getElementById('fin-ultimos');
-  if(ultEl){const todos=[...ingresos.slice(-5).map(x=>({f:x.f,concepto:x.concepto,tipo:'Ingreso',monto:x.monto})),...gastosL.slice(-5).map(x=>({f:x.f,concepto:x.desc,tipo:'Gasto Local',monto:-x.monto})),...gastosP.slice(-5).map(x=>({f:x.f,concepto:x.desc,tipo:'Gasto Personal',monto:-x.monto}))].sort((a,b)=>(b.f||'').localeCompare(a.f||'')).slice(0,8);ultEl.innerHTML=todos.length?todos.map(x=>`<tr><td>${x.f}</td><td>${esc(x.concepto||'—')}</td><td><span class="bdg ${esc(x.monto>=0?'bgg':x.tipo.includes('Personal')?'bpp':'brr')}">${esc(x.tipo)}</span></td><td style="font-weight:700;color:${x.monto>=0?'var(--grn)':'var(--red)'}">${x.monto>=0?'+':''}${fmt(Math.abs(x.monto))}</td></tr>`).join(''):'<tr><td colspan="4" class="empty-row">Sin movimientos</td></tr>'}
+  if(ultEl){const todos=[...ingresos.slice(-5).map(x=>({f:x.f,concepto:x.concepto,tipo:'Ingreso',monto:x.monto})),...gastosL.slice(-5).map(x=>({f:x.f,concepto:x.desc,tipo:'Gasto Local',monto:-x.monto})),...gastosP.slice(-5).map(x=>({f:x.f,concepto:x.desc,tipo:'Gasto Personal',monto:-x.monto}))].sort((a,b)=>fechaVentaISO({f:b.f}).localeCompare(fechaVentaISO({f:a.f}))).slice(0,8);ultEl.innerHTML=todos.length?todos.map(x=>`<tr><td>${x.f}</td><td>${esc(x.concepto||'—')}</td><td><span class="bdg ${esc(x.monto>=0?'bgg':x.tipo.includes('Personal')?'bpp':'brr')}">${esc(x.tipo)}</span></td><td style="font-weight:700;color:${x.monto>=0?'var(--grn)':'var(--red)'}">${x.monto>=0?'+':''}${fmt(Math.abs(x.monto))}</td></tr>`).join(''):'<tr><td colspan="4" class="empty-row">Sin movimientos</td></tr>'}
   const ingTbl=document.getElementById('ing-tbl');if(ingTbl)ingTbl.innerHTML=ingresos.length?[...ingresos].reverse().map((x,i)=>`<tr><td>${x.f}</td><td>${esc(x.concepto)}</td><td><span class="bdg bsk">${esc(x.cat||'Otro')}</span></td><td>${esc(x.metodo||'Efectivo')}</td><td class="monto-ing">${fmt(x.monto)}</td><td><button class="btn bd bsm" onclick="delIng(${ingresos.length-1-i})">🗑️</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty-row">Sin ingresos registrados</td></tr>';
   const gloTbl=document.getElementById('glo-tbl');if(gloTbl)gloTbl.innerHTML=gastosL.length?[...gastosL].reverse().map((x,i)=>`<tr><td>${x.f}</td><td>${esc(x.desc)}</td><td><span class="bdg bii">${esc(x.cat||'Operativo')}</span></td><td>${esc(x.resp||me?.nombre?.split(' ')[0]||'—')}</td><td class="monto-gas">${fmt(x.monto)}</td><td><button class="btn bd bsm" onclick="delGlo(${gastosL.length-1-i})">🗑️</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty-row">Sin gastos del local</td></tr>';
   const gpeTbl=document.getElementById('gpe-tbl');if(gpeTbl)gpeTbl.innerHTML=gastosP.length?[...gastosP].reverse().map((x,i)=>`<tr><td>${x.f}</td><td>${esc(x.desc)}</td><td><span class="bdg bpp">${esc(x.cat||'Personal')}</span></td><td style="color:var(--p);font-weight:700">${fmt(x.monto)}</td><td><button class="btn bd bsm" onclick="delGpe(${gastosP.length-1-i})">🗑️</button></td></tr>`).join(''):'<tr><td colspan="5" class="empty-row">Sin gastos personales</td></tr>';
 }
-function delIng(i){if(!confirm('¿Eliminar?'))return;ingresos.splice(i,1);sv(K.ing,ingresos);rFinanzas();notify('🗑️ Eliminado')}
-function delGlo(i){if(!confirm('¿Eliminar?'))return;gastosL.splice(i,1);sv(K.glo,gastosL);rFinanzas();notify('🗑️ Eliminado')}
-function delGpe(i){if(!confirm('¿Eliminar?'))return;gastosP.splice(i,1);sv(K.gpe,gastosP);rFinanzas();notify('🗑️ Eliminado')}
+async function delIng(i){if(!await confirmar('¿Eliminar este ingreso?',{icono:'🗑️',titulo:'Eliminar',boton:'Sí, eliminar',peligro:true}))return;ingresos.splice(i,1);sv(K.ing,ingresos);rFinanzas();notify('🗑️ Eliminado')}
+async function delGlo(i){if(!await confirmar('¿Eliminar este gasto del local?',{icono:'🗑️',titulo:'Eliminar',boton:'Sí, eliminar',peligro:true}))return;gastosL.splice(i,1);sv(K.glo,gastosL);rFinanzas();notify('🗑️ Eliminado')}
+async function delGpe(i){if(!await confirmar('¿Eliminar este gasto personal?',{icono:'🗑️',titulo:'Eliminar',boton:'Sí, eliminar',peligro:true}))return;gastosP.splice(i,1);sv(K.gpe,gastosP);rFinanzas();notify('🗑️ Eliminado')}
 
 // VENTAS
 function filtrarHoy(){const vf=document.getElementById('ventasFecha');if(vf)vf.value=fechaISO();rVentas()}
@@ -3307,18 +3346,18 @@ function rCierre(){
   const btn=document.getElementById('btnCerrarDia');
   if(btn){const ya=cierres.find(c=>c.fecha===h);btn.textContent=ya?'✅ Día ya cerrado':'✅ Confirmar Cierre del Día';btn.disabled=!!ya;btn.style.background=ya?'rgba(255,255,255,.07)':'rgba(255,255,255,.16)'}
 }
-function confirmarCierre(){
+async function confirmarCierre(){
   const h=hoy();if(cierres.find(c=>c.fecha===h)){notify('⚠️ Este día ya fue cerrado');return}
   const R=resumenDia(h);
   const inp=document.getElementById('arqContado');
   const contado=(inp&&inp.value!=='')?parseFloat(inp.value):null;
-  if(contado===null&&!confirm('No contaste el dinero del cajón.\n\nSin arqueo no vas a saber si la caja cuadró. ¿Cerrar de todas formas?'))return;
+  if(contado===null&&!await confirmar('No contaste el dinero del cajón.\n\nSin arqueo no vas a saber si la caja cuadró. ¿Cerrar de todas formas?',{icono:'⚠️',titulo:'Sin arqueo',boton:'Sí, cerrar'}))return;
   const dif=contado===null?null:Math.round(contado-R.esperado);
   let aviso=`¿Confirmar el cierre del día ${h}?`;
   if(dif!==null&&Math.abs(dif)>100)aviso+=`\n\n⚠️ La caja NO cuadra: ${dif<0?'faltan':'sobran'} ${fmt(Math.abs(dif))}.`;
   else if(dif!==null)aviso+='\n\n✅ La caja cuadra.';
   aviso+='\n\nEsta acción guardará el resumen en el historial.';
-  if(!confirm(aviso))return;
+  if(!await confirmar(aviso,{icono:'🔐',titulo:'Cerrar el día',boton:'Sí, cerrar el día'}))return;
   const vh=R.vh,tot=R.tot,totIva=R.totIva,totGas=R.totGas,efe=R.efe;
   cierres.push({fecha:h,ts:Date.now(),cajero:me?.nombre?.split(' ').slice(0,2).join(' ')||'—',
     apertura:R.apert,totalVentas:tot,transacciones:vh.length,totalGastos:totGas,
@@ -3379,18 +3418,18 @@ function aperConfirmar(){
   abrirCaja(v,t);
   go('pos');
 }
-function aperSaltar(){
+async function aperSaltar(){
   const msg=esAdmin()
     ? '¿Entrar sin abrir la caja?\n\nPuedes abrirla después con el botón "Apertura Caja".'
     : '⚠️ Si vendes sin abrir la caja, al cerrar el día el sistema NO va a poder decirte si cuadró.\n\n¿Entrar de todas formas?';
-  if(!confirm(msg))return;
+  if(!await confirmar(msg,{icono:'💰',titulo:'Entrar sin abrir la caja',boton:'Sí, entrar'}))return;
   document.getElementById('aperBox').classList.remove('on');
 }
 function abrirCaja(monto,turno){cajaActual={fecha:hoy(),monto:parseFloat(monto)||0,turno,cajero:me?.nombre?.split(' ').slice(0,2).join(' ')||'—',abierta:true,ts:Date.now()};sv(K.caja,cajaActual);clsM();notify(`🔓 Caja abierta con ${fmt(cajaActual.monto)} — Turno: ${turno}`);rCierre();rDash()}
 
 // CLIENTES
 function rClis(){const el=document.getElementById('cliTbl');if(!el)return;el.innerHTML=clis.map((c,i)=>`<tr><td style="font-family:monospace;font-size:11px">C-${String(i+1).padStart(3,'0')}</td><td><strong>${esc(c.nombre)}</strong></td><td>${esc(c.cc||'—')}</td><td>${esc(c.tel||'—')}</td><td><span class="bdg ${esc(c.tipo==='VIP'?'baa':c.tipo==='Corporativo'?'bii':'bpp')}">${esc(c.tipo||'Regular')}</span></td><td><button class="btn bd bsm" onclick="delCli(${i})">🗑️</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty-row">Sin clientes registrados</td></tr>'}
-function delCli(i){if(!confirm('¿Eliminar?'))return;clis.splice(i,1);sv(K.c,clis);rClis();notify('🗑️ Eliminado')}
+async function delCli(i){if(!await confirmar('¿Eliminar este cliente?',{icono:'🗑️',titulo:'Eliminar cliente',boton:'Sí, eliminar',peligro:true}))return;clis.splice(i,1);sv(K.c,clis);rClis();notify('🗑️ Eliminado')}
 
 // USUARIOS
 function rUsers(){const el=document.getElementById('usrWr');if(!el)return;el.innerHTML=users.map(u=>`<div class="uc"><div class="uav ${u.rol}">${esc(u.nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase())}</div><div class="ui"><div class="un">${esc(u.nombre)}</div><div class="ur">${u.rol==='admin'?'👑 Administrador':'🛒 Vendedor'}</div><div class="um">Login: <strong>${esc(u.alias||u.nombre.split(' ')[0].toLowerCase())}</strong> · Creado: ${u.creado||'—'}</div></div><div style="display:flex;gap:8px;align-items:center"><span class="bdg ${u.activo!==false?'bgg':'brr'}">${u.activo!==false?'✓ Activo':'✗ Inactivo'}</span><button class="btn bo bsm" title="Cambiar contraseña" onclick="openM('resetClave','${u.id}')">🔑</button>${u.id!=='u1'?`<button class="btn bo bsm" onclick="togU('${u.id}')">${u.activo!==false?'Desactivar':'Activar'}</button><button class="btn bd bsm" onclick="delU('${u.id}')">🗑️</button>`:'<span style="font-size:10px;color:var(--t3)">Admin principal</span>'}</div></div>`).join('')}
@@ -3428,7 +3467,7 @@ function cambiarClaveDe(id){
 }
 function togU(id){
   if(!exigir('usuarios','activar o desactivar usuarios'))return;const u=users.find(x=>x.id===id);if(!u)return;u.activo=!u.activo;sv(K.u,users);rUsers();notify(`${u.activo?'✅ Activado':'⛔ Desactivado'}: ${esc(u.nombre)}`)}
-function delU(id){if(!exigir('usuarios','borrar usuarios'))return;if(id==='u1'){notify('⛔ No puedes eliminar al admin principal');return}if(!confirm('¿Eliminar?'))return;users=users.filter(x=>x.id!==id);sv(K.u,users);rUsers();notify('🗑️ Eliminado')}
+async function delU(id){if(!exigir('usuarios','borrar usuarios'))return;if(id==='u1'){notify('⛔ No puedes eliminar al admin principal');return}if(!await confirmar('¿Eliminar este usuario?',{icono:'🗑️',titulo:'Eliminar usuario',boton:'Sí, eliminar',peligro:true}))return;users=users.filter(x=>x.id!==id);sv(K.u,users);rUsers();notify('🗑️ Eliminado')}
 
 // CONFIG
 function loadCfg(){
@@ -3487,8 +3526,8 @@ async function impAll(){
 async function clrAll(){
   if(!exigir('borrarDatos','borrar los datos'))return;
   if(!await pedirClaveAdmin('borrar todos los datos'))return;
-  if(!confirm('⚠️ ¿Borrar TODOS los datos de este negocio?\n\nSe pierden ventas, inventario, clientes y cartera.'))return;
-  if(!confirm('Esto no se puede deshacer.\n\n¿Descargaste el respaldo antes?'))return;
+  if(!await confirmar('¿Borrar TODOS los datos de este negocio?\n\nSe pierden ventas, inventario, clientes y cartera.',{icono:'⚠️',titulo:'Borrar todo',boton:'Sí, borrar',peligro:true}))return;
+  if(!await confirmar('Esto no se puede deshacer.\n\n¿Descargaste el respaldo antes?',{icono:'⚠️',titulo:'Última confirmación',boton:'Sí, ya lo descargué',peligro:true}))return;
   if(ESCRITORIO){
     const r=await window.posAPI.reiniciar(false);
     if(r&&!r.ok)notify('⚠️ '+(r.error||'No se pudo borrar'));
@@ -3594,9 +3633,9 @@ function openM(type,data){
     const isE=!!data&&typeof data==='object'&&data.id;
     const co=cats.map(c=>`<option value="${c}" ${esc(isE&&data.cat===c?'selected':'')}>${c}</option>`).join('');
     html=`<div class="mtt">${isE?'✏️ Editar':'📦 Nuevo'} Producto</div>
-<div class="mg2"><div class="mf"><label class="ml">Código / Barras</label><input class="mi" id="mPid" placeholder="7700000000" value="${isE?data.id||'':''}"></div><div class="mf"><label class="ml">Emoji</label><input class="mi" id="mPe" placeholder="🐶 🐱 🐾" value="${esc(isE?data.e||'':'')}"></div></div>
+<div class="mg2"><div class="mf"><label class="ml">Código / Barras</label><input class="mi" id="mPid" placeholder="7700000000" value="${isE?data.id||'':''}" ${isE?'readonly title="El código no se cambia: es el que usan las ventas y el kardex"':'oninput="this.dataset.manual=this.value?\'1\':\'0\'"'}></div><div class="mf"><label class="ml">Emoji</label><input class="mi" id="mPe" placeholder="🐶 🐱 🐾" value="${esc(isE?data.e||'':'')}"></div></div>
 <div class="mf"><label class="ml">Nombre del producto *</label><input class="mi" id="mPn" placeholder="Nombre del producto" value="${esc(isE?data.name||'':'')}"></div>
-<div class="mg2"><div class="mf"><label class="ml">Categoría *</label><select class="ms" id="mPc" ${isE?'':'onchange="unidadPorCategoria()"'}>${co||'<option>Sin categorías</option>'}</select></div><div class="mf"><label class="ml">Se vende por</label><select class="ms" id="mPu">${Object.entries(UNIDADES).map(([k,v])=>`<option value="${k}" ${((isE?(data.u||'und'):((RUBROS[brand.rubro]||{}).u||'und'))===k)?'selected':''}>${v.nombre}</option>`).join('')}</select></div></div>
+<div class="mg2"><div class="mf"><label class="ml">Categoría *</label><select class="ms" id="mPc" ${isE?'':'onchange="unidadPorCategoria();ponerCodigoSugerido()"'}>${co||'<option>Sin categorías</option>'}</select></div><div class="mf"><label class="ml">Se vende por</label><select class="ms" id="mPu">${Object.entries(UNIDADES).map(([k,v])=>`<option value="${k}" ${((isE?(data.u||'und'):((RUBROS[brand.rubro]||{}).u||'und'))===k)?'selected':''}>${v.nombre}</option>`).join('')}</select></div></div>
 <div class="mf"><label class="ml">Stock actual <span style="font-weight:400;text-transform:none">(en la unidad elegida; admite decimales: 12,5)</span></label><input class="mi" id="mPs" type="number" min="0" step="any" value="${isE?data.stock||0:0}"></div>
 <div class="mg2"><div class="mf"><label class="ml">Precio de Costo (COP)</label><input class="mi" id="mPco" type="number" min="0" value="${isE?data.cost||0:0}"></div><div class="mf"><label class="ml">Precio de Venta (COP) *</label><input class="mi" id="mPp" type="number" min="0" value="${isE?data.price||0:0}"></div></div>
 <div class="mg2"><div class="mf"><label class="ml">Precio mayorista (opcional)</label><input class="mi" id="mPpm" type="number" min="0" value="${isE?data.precioMay||'':''}" placeholder="Ej: 2800"></div><div class="mf"><label class="ml">Mayorista desde (cantidad)</label><input class="mi" id="mPmin" type="number" min="0" step="any" value="${isE?data.minMay||'':''}" placeholder="Ej: 12"></div></div>
@@ -3745,16 +3784,17 @@ ${disp<=0?'<p style="color:var(--red);font-size:13px;font-weight:600;margin-bott
 </div>`;
   }else{notify('⚠️ Módulo no disponible');return}
   box.innerHTML=html;document.getElementById('mBg').classList.add('op');
+  if(type==='producto'&&!(data&&data.id)){unidadPorCategoria();ponerCodigoSugerido()}
   setTimeout(()=>{const fi=box.querySelector('input:not([readonly])');if(fi)fi.focus()},100);
 }
 function clsM(e){if(!e||e.target.id==='mBg')document.getElementById('mBg').classList.remove('op')}
 
-function sbProd(eid){
+async function sbProd(eid){
   if(!exigir('productos','crear o editar productos'))return;
   const nm=(document.getElementById('mPn')?.value||'').trim();
   // el código viaja dentro de atributos onclick: se restringe a caracteres seguros
   let id=(document.getElementById('mPid')?.value||'').trim().replace(/[^A-Za-z0-9_.\-]/g,'');
-  if(!id)id='P'+Date.now();
+  if(!id)id=codigoSugerido(document.getElementById('mPc')?.value||'');
   const e=(document.getElementById('mPe')?.value||'').trim().slice(0,4)||'📦';
   const u=document.getElementById('mPu')?.value||'und';
   const cat=document.getElementById('mPc')?.value||'',stk=u==='und'?(parseInt(document.getElementById('mPs')?.value)||0):(Math.round((parseFloat(document.getElementById('mPs')?.value)||0)*1000)/1000),cost=parseFloat(document.getElementById('mPco')?.value)||0,price=parseFloat(document.getElementById('mPp')?.value)||0;
@@ -3762,10 +3802,11 @@ function sbProd(eid){
   if(!cat){notify('⚠️ Selecciona una categoría');return}
   if(price<=0){notify('⚠️ El precio debe ser mayor a '+fmt(0));return}
   if(stk<0){notify('⚠️ El stock no puede ser negativo');return}
-  if(cost>0&&price<cost&&!confirm('El precio de venta ('+fmt(price)+') es menor que el costo ('+fmt(cost)+'), vas a perder dinero en cada unidad.\n\n¿Guardar de todas formas?'))return;
+  if(cost>0&&price<cost&&!await confirmar('El precio de venta ('+fmt(price)+') es menor que el costo ('+fmt(cost)+'): vas a perder dinero en cada unidad.\n\n¿Guardar de todas formas?',{icono:'⚠️',titulo:'Precio por debajo del costo',boton:'Sí, guardar'}))return;
+  if(!eid&&prods.some(p=>p.id===id)){notify('⚠️ Ya hay un producto con el código '+id+'. Cámbialo.');const ci=document.getElementById('mPid');if(ci){ci.focus();ci.select()}return}
   const prod={id:eid||id,name:nm,e,cat,stock:stk,cost,price};if(u!=='und')prod.u=u;const idx=prods.findIndex(p=>p.id===prod.id);
   const pm=parseFloat(document.getElementById('mPpm')?.value)||0,pmin=parseFloat(document.getElementById('mPmin')?.value)||0;
-  if(pm>0){if(pm>price&&!confirm('El precio mayorista es mayor que el de venta. ¿Guardar así?'))return;prod.precioMay=pm;if(pmin>0)prod.minMay=pmin}
+  if(pm>0){if(pm>price&&!await confirmar('El precio mayorista es mayor que el de venta. ¿Guardar así?',{icono:'⚠️',titulo:'Precio mayorista',boton:'Sí, guardar'}))return;prod.precioMay=pm;if(pmin>0)prod.minMay=pmin}
   const antes=idx>=0?prods[idx]:null;
   if(antes&&antes.lotes)prod.lotes=antes.lotes;
   const fv=document.getElementById('mPv')?.value;
@@ -3821,8 +3862,9 @@ function rReportes(){
     <div class="kpi"><div class="kb" style="background:linear-gradient(90deg,#f59e0b,#fcd34d)"></div><div class="ki">📋</div><div class="kl">IVA Cobrado</div><div class="kv">${fmt(totIva)}</div><div class="kh">Total acumulado</div></div>
     <div class="kpi"><div class="kb" style="background:linear-gradient(90deg,#ef4444,#fb7185)"></div><div class="ki">🎁</div><div class="kl">Descuentos</div><div class="kv">${fmt(totDsc)}</div><div class="kh">Total otorgado</div></div>`;
   // Barras por día
-  const byDay={};vf.forEach(v=>{byDay[v.f]=(byDay[v.f]||0)+v.total});
-  const days=Object.entries(byDay).sort((a,b)=>a[0].localeCompare(b[0])).slice(-14);
+  // se ordena por fecha real (v.f es d/m/aaaa: como texto, el 9/9 quedaba después del 21/9)
+  const byDay={},lab={};vf.forEach(v=>{const k=fechaVentaISO(v);byDay[k]=(byDay[k]||0)+v.total;lab[k]=v.f});
+  const days=Object.entries(byDay).sort((a,b)=>a[0].localeCompare(b[0])).slice(-14).map(([k,t])=>[lab[k],t]);
   const mx=Math.max(...days.map(d=>d[1]),1);
   const bc=document.getElementById('rpBarChart');
   if(bc)bc.innerHTML=days.length?days.map(([f,t])=>`<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:3px"><div style="width:100%;background:linear-gradient(to top,var(--p),var(--pmid));border-radius:4px 4px 0 0;height:${Math.max((t/mx)*100,4)}px;min-height:4px" title="${fmt(t)}"></div><span style="font-size:8px;color:var(--t3);transform:rotate(-35deg);transform-origin:center;white-space:nowrap">${f.slice(0,5)}</span></div>`).join(''):'<p style="font-size:12px;color:var(--t3);padding:20px">Sin datos en este período</p>';
@@ -4277,9 +4319,9 @@ function guardarCompra(){
   if(ESCRITORIO) window.posAPI.bitacora({ usuario: me?.nombre, accion: 'compra', detalle: id + ' ' + reg.total });
   cerrarHoja(); rCompras(); notify('✅ Compra ' + id + ' guardada: ' + items.length + ' producto' + (items.length !== 1 ? 's' : '') + ' · ' + fmt(reg.total));
 }
-function pagarCompra(id){
+async function pagarCompra(id){
   const c = compras.find(x => x.id === id); if(!c || c.pagada) return;
-  if(!confirm('¿Marcar la compra ' + id + ' (' + fmt(c.total) + ') como pagada al proveedor?')) return;
+  if(!await confirmar('¿Marcar la compra ' + id + ' (' + fmt(c.total) + ') como pagada al proveedor?',{icono:'💵',titulo:'Pagar compra',boton:'Sí, ya la pagué'})) return;
   c.pagada = true; c.pagadaTs = Date.now(); sv(K.compras, compras); rCompras(); notify('✅ Compra ' + id + ' pagada');
 }
 function verCompra(id){
@@ -4353,13 +4395,13 @@ function tomaScan(e){
   e.target.value = '';
   if(p) tomaSumar(p); else notify('⚠️ "' + q + '" no está en el inventario');
 }
-function aplicarToma(){
+async function aplicarToma(){
   if(!exigir('productos', 'ajustar el inventario')) return;
   const b = tomaBorrador(), ks = Object.keys(b.c).filter(k => prods.some(p => p.id === k));
   if(!ks.length){ notify('⚠️ Todavía no has contado ningún producto'); return; }
   const items = ks.map(k => { const p = prods.find(x => x.id === k); return { pid: k, nombre: p.name, sistema: r3(p.stock || 0), contado: b.c[k], dif: r3(b.c[k] - (p.stock || 0)), costo: p.cost || 0 }; });
   const conDif = items.filter(i => i.dif);
-  if(!confirm('Se van a ajustar ' + conDif.length + ' producto' + (conDif.length !== 1 ? 's' : '') + ' al conteo físico (' + items.length + ' contados en total).\n\nLos productos que no contaste no cambian. ¿Aplicar?')) return;
+  if(!await confirmar('Se van a ajustar ' + conDif.length + ' producto' + (conDif.length !== 1 ? 's' : '') + ' al conteo físico (' + items.length + ' contados en total).\n\nLos productos que no contaste no cambian.',{icono:'📋',titulo:'Aplicar la toma física',boton:'Sí, aplicar'})) return;
   const id = 'T-' + String(conteos.length + 1).padStart(4, '0');
   conDif.forEach(i => { const p = prods.find(x => x.id === i.pid); p.stock = i.contado; normalizarLotes(p); });
   sv(K.p, prods);
@@ -4372,7 +4414,7 @@ function aplicarToma(){
     + '<table><thead><tr><th>Producto</th><th>Sistema</th><th>Contado</th><th>Diferencia</th><th>Valor</th></tr></thead><tbody>' + (conDif.length ? conDif.map(i => '<tr><td>' + esc(i.nombre) + '</td><td>' + fmtCant(i.sistema) + '</td><td>' + fmtCant(i.contado) + '</td><td style="font-weight:800;color:' + (i.dif < 0 ? 'var(--red)' : 'var(--amb)') + '">' + (i.dif > 0 ? '+' : '') + fmtCant(i.dif) + '</td><td>' + fmt(i.dif * i.costo) + '</td></tr>').join('') : '<tr><td colspan="5" class="empty-row">Todo cuadró: sin diferencias 🎉</td></tr>')
     + '</tbody></table><div style="text-align:right;margin-top:12px"><button class="btn bo" onclick="excelConteo(\'' + id + '\')">📊 Descargar Excel</button> <button class="btn bp" onclick="cerrarHoja()">Listo</button></div>');
 }
-function descartarToma(){ const b = tomaBorrador(); if(!Object.keys(b.c).length){ notify('No hay conteo en curso'); return; } if(!confirm('¿Descartar el conteo en curso? No se ajusta nada.')) return; sv('pos_conteo_borrador', null); rToma(); notify('Conteo descartado'); }
+async function descartarToma(){ const b = tomaBorrador(); if(!Object.keys(b.c).length){ notify('No hay conteo en curso'); return; } if(!await confirmar('¿Descartar el conteo en curso? No se ajusta nada.',{icono:'🗑️',titulo:'Descartar conteo',boton:'Sí, descartar',peligro:true})) return; sv('pos_conteo_borrador', null); rToma(); notify('Conteo descartado'); }
 function excelConteo(id){ const c = conteos.find(x => x.id === id); if(!c) return;
   descargarCSV('toma_fisica_' + id + '.csv', 'Toma física ' + id + ' del ' + c.f + ' · ' + c.usuario, ['Código', 'Producto', 'Sistema', 'Contado', 'Diferencia', 'Costo unit.', 'Valor diferencia'], c.items.map(i => [i.pid, i.nombre, i.sistema, i.contado, i.dif, i.costo, Math.round(i.dif * i.costo)])); }
 
@@ -4623,14 +4665,14 @@ function verDetalleFiado(nombre){
   document.getElementById('tkBg').classList.add('op');
 }
 
-function registrarAbono(nombre){
+async function registrarAbono(nombre){
   const monto = parseFloat(document.getElementById('abMonto')?.value) || 0;
   const metodo = document.getElementById('abMetodo')?.value || 'Efectivo';
   const nota = (document.getElementById('abNota')?.value || '').trim();
   const saldo = saldoCliente(nombre);
   if(monto <= 0){ notify('⚠️ El monto debe ser mayor a ' + fmt(0)); return; }
   if(monto > saldo + 0.5){
-    if(!confirm('El abono (' + fmt(monto) + ') es mayor que el saldo (' + fmt(saldo) + ').\n\n¿Registrarlo de todas formas?')) return;
+    if(!await confirmar('El abono (' + fmt(monto) + ') es mayor que el saldo (' + fmt(saldo) + ').\n\n¿Registrarlo de todas formas?',{icono:'⚠️',titulo:'Abono mayor al saldo',boton:'Sí, registrar'})) return;
   }
   abonos.push({
     cliente: nombre, monto, metodo, nota,
@@ -4675,8 +4717,9 @@ function manejarAtras(){
   // 3. Si hay algo en el carrito, se avisa antes de salir de la venta
   const enPos=document.getElementById('pn-pos')?.classList.contains('on');
   if(enPos && cart.length){
-    if(!confirm('Hay '+cart.length+' producto(s) en el carrito. ¿Salir del punto de venta?')) return true;
-    clrCart();
+    confirmar('Hay '+cart.length+' producto(s) en el carrito. ¿Salir del punto de venta?',{icono:'🛒',titulo:'Carrito con productos',boton:'Sí, salir'})
+      .then(ok => { if(ok){ clrCart(); go('dashboard'); } });
+    return true;
   }
   // 4. Si no esta en el tablero, vuelve al tablero
   const actual=document.querySelector('.pn.on');
@@ -4690,7 +4733,7 @@ function activarBotonAtras(){
   if(App && App.addListener){
     App.addListener('backButton', () => {
       if(manejarAtras()) return;
-      if(confirm('¿Cerrar la aplicación?')) App.exitApp();
+      confirmar('¿Cerrar la aplicación?',{icono:'🚪',titulo:'Salir',boton:'Sí, cerrar'}).then(ok => { if(ok) App.exitApp(); });
     });
     return;
   }
