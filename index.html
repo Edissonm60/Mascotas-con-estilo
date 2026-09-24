@@ -1300,7 +1300,7 @@ const COLECCIONES = {
 };
 const STORES = ['kv', ...Object.values(COLECCIONES).map(c => c.store)];
 
-const VERSION_POS = '7.0.3';
+const VERSION_POS = '7.0.4';
 function versionActual(){
   if(ESCRITORIO && INFO_APP && INFO_APP.version) return INFO_APP.version;
   return VERSION_POS;
@@ -3164,7 +3164,7 @@ async function cobrar(){
 function showTk(items,pay,tid,sub,iva,tot,dsc=0,rec=0,cam=0,cli=null){
   const now=new Date(),on=ivaActivo();
   ULT_WA=textoTiqueteWA(items,pay,tid,sub,iva,tot,dsc,rec,cam,cli,now);
-  document.getElementById('tkBox').innerHTML=`<div class="tkh"><div class="tkl">${esc(brand.logoEmoji||'')} ${esc(cfg.n||brand.nombre||'MI NEGOCIO')}</div><div class="tks">${esc(cfg.d||brand.sub||'')}${cfg.i?' · NIT: '+esc(cfg.i):''}</div>${cfg.t?'<div class="tks">Tel: '+esc(cfg.t)+'</div>':''}<div class="tkn">Tiquete ${tid}</div></div><div class="tkb"><div class="tkm">${now.toLocaleDateString('es-CO')} · ${now.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})} · ${esc(me?.nombre?.split(' ')[0]||'—')}</div><hr class="tkdiv">${items.map(i=>`<div class="tki"><span>${esc(i.e)} ${esc(i.name)} ×${esc(cantTxt(i))}</span><span><b>${fmt(i.price*i.qty)}</b></span></div>`).join('')}<hr class="tkdiv"><div class="tksr"><span>Subtotal</span><span>${fmt(sub)}</span></div>${dsc>0?`<div class="tksr" style="color:var(--grn)"><span>Descuento</span><span>-${fmt(dsc)}</span></div>`:''} ${on?`<div class="tksr"><span>IVA ${cfg.ivaPct||19}%${ivaIncluido()?' (incluido)':''}</span><span>${fmt(iva)}</span></div>`:''}<div class="tktot"><span>TOTAL</span><span>${fmt(tot)}</span></div><div class="tkp">Pago: <b>${esc(pay)}</b></div>${rec>0?`<div class="tksr"><span>Recibido</span><span>${fmt(rec)}</span></div><div class="tksr" style="font-weight:700"><span>Devuelta</span><span>${fmt(cam)}</span></div>`:''}${cli?`<div class="tksr" style="font-weight:700;color:var(--amb)"><span>FIADO A</span><span>${esc(cli.nombre)}</span></div>`:''}</div><div class="tkf">${esc(cfg.f||'¡Gracias por su compra!')}<br>Conserva este tiquete${brand.distribuidor?'<br>'+esc(brand.distribuidor):''}${MOSTRAR_AUTOR_EN_TIQUETE?'<div style="font-size:8px;opacity:.6;margin-top:6px">Sistema POS · '+esc(AUTOR.sigla)+' · '+esc(AUTOR.telefono)+'</div>':''}</div>`;
+  document.getElementById('tkBox').innerHTML=`<div class="tkh"><div class="tkl">${esc(brand.logoEmoji||'')} ${esc(cfg.n||brand.nombre||'MI NEGOCIO')}</div><div class="tks">${esc(cfg.d||brand.sub||'')}${cfg.i?' · NIT: '+esc(cfg.i):''}</div>${cfg.t?'<div class="tks">Tel: '+esc(cfg.t)+'</div>':''}<div class="tkn">Tiquete ${tid}</div></div><div class="tkb"><div class="tkm">${now.toLocaleDateString('es-CO')} · ${now.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})} · ${esc(me?.nombre?.split(' ')[0]||'—')}</div><hr class="tkdiv">${items.map(i=>`<div class="tki"><span>${esc(i.e)} ${esc(i.name)} ×${esc(cantTxt(i))}</span><span><b>${fmt(i.price*i.qty)}</b></span></div>`).join('')}<hr class="tkdiv"><div class="tksr"><span>Subtotal</span><span>${fmt(sub)}</span></div>${dsc>0?`<div class="tksr" style="color:var(--grn)"><span>Descuento</span><span>-${fmt(dsc)}</span></div>`:''} ${on?`<div class="tksr"><span>IVA ${cfg.ivaPct||19}%${ivaIncluido()?' (incluido)':''}</span><span>${fmt(iva)}</span></div>`:''}<div class="tktot"><span>TOTAL</span><span>${fmt(tot)}</span></div><div class="tkp">Pago: <b>${esc(pay)}</b></div>${rec>0?`<div class="tksr"><span>Recibido</span><span>${fmt(rec)}</span></div><div class="tksr" style="font-weight:700"><span>Devuelta</span><span>${fmt(cam)}</span></div>`:''}${cli?`<div class="tksr" style="font-weight:700;color:var(--amb)"><span>FIADO A</span><span>${esc(cli.nombre)}</span></div>`:''}</div><div class="tkf">${esc(cfg.f||'¡Gracias por su compra!')}<br>Conserva este tiquete${brand.distribuidor?'<br>'+esc(brand.distribuidor):''}${MOSTRAR_AUTOR_EN_TIQUETE?'<div style="font-size:8px;opacity:.6;margin-top:6px">Sistema POS · '+esc(AUTOR.sigla)+'</div>':''}</div>`;
   document.getElementById('tkBg').classList.add('op');
 }
 function showCT(){
@@ -4486,19 +4486,47 @@ function abrirWA(numero, texto){
   window.open('https://wa.me/' + numeroWA(numero) + '?text=' + encodeURIComponent(texto), '_blank');
 }
 function validarCel(t){ const d = numeroWA(t); return (d.length === 12 && d.startsWith('57')) || d.length >= 11 ? '' : 'Escribe el celular de 10 dígitos (ej. 3001234567)'; }
-function pieWA(){ return MOSTRAR_AUTOR_EN_TIQUETE ? '\n\n_Sistema POS · ' + AUTOR.sigla + ' · ' + AUTOR.telefono + '_' : ''; }
+/* El recibo es del NEGOCIO: no lleva el teléfono del desarrollador, solo el
+   crédito discreto. El soporte lo pide el dueño desde el programa. */
+function pieWA(){ return MOSTRAR_AUTOR_EN_TIQUETE ? '\n\n_Sistema POS · ' + AUTOR.sigla + '_' : ''; }
 function textoTiqueteWA(items,pay,tid,sub,iva,tot,dsc,rec,cam,cli,now){
-  const neg = cfg.n || brand.nombre || 'Mi negocio';
-  let t = '*' + neg + '*' + (cfg.i ? '\nNIT ' + cfg.i : '') + (cfg.d ? '\n' + cfg.d : '')
-        + '\n\nTiquete ' + tid + ' · ' + now.toLocaleDateString('es-CO') + ' ' + now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) + '\n';
-  items.forEach(i => { t += '\n' + cantTxt(i) + ' x ' + i.name + ' — ' + fmt(i.price * i.qty); });
-  t += '\n\nSubtotal: ' + fmt(sub);
-  if(dsc > 0) t += '\nDescuento: -' + fmt(dsc);
-  if(ivaActivo()) t += '\nIVA ' + (cfg.ivaPct || 19) + '%' + (ivaIncluido() ? ' (incluido)' : '') + ': ' + fmt(iva);
-  t += '\n*TOTAL: ' + fmt(tot) + '*\nPago: ' + pay;
-  if(rec > 0) t += '\nRecibido: ' + fmt(rec) + ' · Devuelta: ' + fmt(cam);
-  if(cli) t += '\nFiado a: ' + cli.nombre + ' · Saldo total: ' + fmt(saldoCliente(cli.nombre));
-  t += '\n\n' + (cfg.f || '¡Gracias por su compra!') + pieWA();
+  /* El recibo se manda dentro de un bloque de ancho fijo (```): WhatsApp lo
+     muestra con letra de máquina y las columnas quedan cuadradas, como un
+     tiquete de verdad. */
+  const A = 32;                                           // ancho del recibo
+  const centro = t => { t = String(t).slice(0, A); const e = Math.max(0, Math.floor((A - t.length) / 2)); return ' '.repeat(e) + t; };
+  const linea = (iz, de) => { iz = String(iz); de = String(de);
+    const hueco = Math.max(1, A - iz.length - de.length); return iz + ' '.repeat(hueco) + de; };
+  const sep = '-'.repeat(A);
+  const neg = (cfg.n || brand.nombre || 'Mi negocio').toUpperCase();
+  const L = [];
+  L.push(centro(neg));
+  if(cfg.i) L.push(centro('NIT ' + cfg.i));
+  if(cfg.d) String(cfg.d).replace(/(.{1,32})(\s|$)/g, (m, x) => { L.push(centro(x.trim())); return ''; });
+  if(cfg.t) L.push(centro('Tel. ' + cfg.t));
+  L.push(sep);
+  L.push(linea('Recibo', tid));
+  L.push(linea('Fecha', now.toLocaleDateString('es-CO') + ' ' + now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })));
+  if(me && me.nombre) L.push(linea('Atendió', me.nombre.split(' ')[0]));
+  L.push(sep);
+  items.forEach(i => {
+    L.push(String(i.name).slice(0, A));
+    L.push(linea('  ' + cantTxt(i) + ' x ' + fmt(i.price), fmt(i.price * i.qty)));
+  });
+  L.push(sep);
+  L.push(linea('Subtotal', fmt(sub)));
+  if(dsc > 0) L.push(linea('Descuento', '-' + fmt(dsc)));
+  if(ivaActivo()) L.push(linea('IVA ' + (cfg.ivaPct || 19) + '%' + (ivaIncluido() ? ' incl.' : ''), fmt(iva)));
+  L.push('='.repeat(A));
+  L.push(linea('TOTAL A PAGAR', fmt(tot)));
+  L.push(sep);
+  L.push(linea('Pago', pay));
+  if(rec > 0){ L.push(linea('Recibido', fmt(rec))); L.push(linea('Devuelta', fmt(cam))); }
+  if(cli){ L.push(sep); L.push(centro('QUEDA FIADO')); L.push(linea('Cliente', String(cli.nombre).slice(0, 20)));
+           L.push(linea('Saldo total', fmt(saldoCliente(cli.nombre)))); }
+  let t = '🧾 *Recibo de compra · ' + (cfg.n || brand.nombre || '') + '*\n\n'
+        + '```\n' + L.join('\n') + '\n```\n\n'
+        + (cfg.f || '¡Gracias por su compra!') + '\n_Conserve este recibo_' + pieWA();
   const c = cli && clis.find(x => x.nombre === cli.nombre);
   return { texto: t, tel: (c && c.tel) || '', tipo: 'tiquete' };
 }
